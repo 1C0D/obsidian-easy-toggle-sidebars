@@ -1,15 +1,15 @@
 {
-	"name": "obsidian-sample-plugin",
+	"name": "easy-toggle-sidebars",
 	"version": "1.0.0",
-	"description": "This is a sample plugin for Obsidian (https://obsidian.md)",
+	"description": "toggle sidebars with middle mouse button",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
-		"version": "node version-bump.mjs && git add manifest.json versions.json"
+		"version": "1.0.0"
 	},
 	"keywords": [],
-	"author": "",
+	"author": "1C0D",
 	"license": "MIT",
 	"devDependencies": {
 		"@types/node": "^16.11.6",

@@ -20,3 +20,11 @@ data.json
 
 # Exclude macOS Finder (System Explorer) View States
 .DS_Store
+
+
+# autoGit
+_newVersion_.ps1
+_autoGit.bat
+autoInit.js
+_autoInit.bat
+Auto.rar
