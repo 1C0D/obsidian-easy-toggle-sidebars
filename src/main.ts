@@ -6,17 +6,11 @@ import {
 export default class EasytoggleSidebar extends Plugin {
 	leftSplit: WorkspaceSidedock;
 	rightSplit: WorkspaceSidedock;
-	rootSplitEl: HTMLElement;
-	leftSplitEl: HTMLElement;
-	rightSplitEl: HTMLElement;
-	doubleClickTimer: NodeJS.Timeout | null;
-	isDoubleClickTimerStarted: boolean;
 
 	async onload() {
 		this.app.workspace.onLayoutReady(() => {
-			this.params();
 			let startX = 0;
-			let threshold = 200;
+			let threshold = 150;
 
 			this.registerDomEvent(
 				this.app.workspace.containerEl,
@@ -40,22 +34,22 @@ export default class EasytoggleSidebar extends Plugin {
 						let distance = Math.sqrt(Math.pow(endX - startX, 2));
 						if (distance > threshold) {
 							if (endX < startX) {
-								this.toggle(this.leftSplit);
+								this.toggle(this.getLeftSplit());
 							} else {
-								this.toggle(this.rightSplit);
+								this.toggle(this.getRightSplit());
 							}
 						} 
 					}
 					if (evt.button === 1 && evt.detail === 2){
-						const isLeftOpen = this.isOpen(this.leftSplit);
-						const isRightOpen = this.isOpen(this.rightSplit);
+						const isLeftOpen = this.isOpen(this.getLeftSplit());
+						const isRightOpen = this.isOpen(this.getRightSplit());
 						if (isLeftOpen && !isRightOpen) {
-							this.toggle(this.leftSplit);
+							this.toggle(this.getLeftSplit());
 						} else if (isRightOpen && !isLeftOpen) {
 							this.toggle(this.rightSplit);
 						} else {
-							this.toggle(this.leftSplit);
-							this.toggle(this.rightSplit);
+							this.toggle(this.getLeftSplit());
+							this.toggle(this.getRightSplit());
 						}
 						
 					}
@@ -64,12 +58,12 @@ export default class EasytoggleSidebar extends Plugin {
 		});
 	}
 
-	params() {
-		this.leftSplit = this.app.workspace.leftSplit;
-		this.rightSplit = this.app.workspace.rightSplit;
-		this.rootSplitEl = (this.app as any).workspace.rootSplit.containerEl;
-		this.leftSplitEl = (this.app as any).workspace.leftSplit.containerEl;
-		this.rightSplitEl = (this.app as any).workspace.rightSplit.containerEl;
+	getLeftSplit(): WorkspaceSidedock {
+		return this.app.workspace.leftSplit;
+	}
+
+	getRightSplit(): WorkspaceSidedock {
+		return this.app.workspace.rightSplit;
 	}
 
 	toggle(side: WorkspaceSidedock) {
