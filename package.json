@@ -1,12 +1,12 @@
 {
 	"name": "easy-toggle-sidebars",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "toggle sidebars with middle mouse button",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
-		"version": "1.0.0"
+		"version": "node version-bump.mjs && git add manifest.json versions.json"
 	},
 	"keywords": [],
 	"author": "1C0D",
