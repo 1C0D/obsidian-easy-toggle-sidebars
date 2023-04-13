@@ -30,7 +30,6 @@ export default class EasytoggleSidebar extends Plugin {
 				(evt: any) => {
 					if (evt.button === 1 && evt.detail === 1) {
 						let endX = evt.clientX;
-						let endY = evt.clientY;
 						let distance = Math.sqrt(Math.pow(endX - startX, 2));
 						if (distance > threshold) {
 							if (endX < startX) {
@@ -38,20 +37,19 @@ export default class EasytoggleSidebar extends Plugin {
 							} else {
 								this.toggle(this.getRightSplit());
 							}
-						} 
+						}
 					}
-					if (evt.button === 1 && evt.detail === 2){
+					if (evt.button === 1 && evt.detail === 2) {
 						const isLeftOpen = this.isOpen(this.getLeftSplit());
 						const isRightOpen = this.isOpen(this.getRightSplit());
 						if (isLeftOpen && !isRightOpen) {
 							this.toggle(this.getLeftSplit());
 						} else if (isRightOpen && !isLeftOpen) {
-							this.toggle(this.rightSplit);
+							this.toggle(this.getRightSplit());
 						} else {
 							this.toggle(this.getLeftSplit());
 							this.toggle(this.getRightSplit());
 						}
-						
 					}
 				}
 			);
@@ -68,15 +66,14 @@ export default class EasytoggleSidebar extends Plugin {
 
 	toggle(side: WorkspaceSidedock) {
 		if (this.isOpen(side)) {
-			side.expand();
-		} else {
 			side.collapse();
+		} else {
+			side.expand();
 		}
 	}
 
 	isOpen(side: WorkspaceSidedock) {
-		if (side.collapsed == true) return true;
-		else return false;
+		if (side.collapsed == true) return false;
+		else return true;
 	}
-
 }
