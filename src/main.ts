@@ -13,10 +13,10 @@ export default class EasytoggleSidebar extends Plugin {
 			let threshold = 150;
 
 			this.registerDomEvent(
-				this.app.workspace.containerEl,
+				document,
 				"mousedown",
 				(evt: any) => {
-					if (evt.button !== 1) {
+					if (evt.button !== 1 ) {
 						return;
 					} else {
 						startX = evt.clientX;
@@ -25,7 +25,7 @@ export default class EasytoggleSidebar extends Plugin {
 			);
 
 			this.registerDomEvent(
-				this.app.workspace.containerEl,
+				document,
 				"mouseup",
 				(evt: any) => {
 					if (evt.button === 1 && evt.detail === 1) {

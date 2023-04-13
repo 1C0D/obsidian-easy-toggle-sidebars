@@ -1,6 +1,6 @@
 {
 	"name": "easy-toggle-sidebars",
-	"version": "1.0.2",
+	"version": "1.0.3",
 	"description": "toggle sidebars with middle mouse button",
 	"main": "main.js",
 	"scripts": {
