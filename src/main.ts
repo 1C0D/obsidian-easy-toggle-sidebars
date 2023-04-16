@@ -1,6 +1,5 @@
 import {
 	App,
-	MarkdownView,
 	Modal,
 	Plugin,
 	PluginSettingTab,
@@ -26,7 +25,6 @@ export default class EasytoggleSidebar extends Plugin {
 	async onload() {
 		await this.loadSettings();
 		await this.saveSettings();
-		console.log("savedVersion;", this.settings.savedVersion)
 		if (
 			this.manifest.version.split(".").map(Number) <= [1, 2, 0] &&
 			this.settings.savedVersion !== this.manifest.version // is reinstall false
@@ -37,9 +35,6 @@ export default class EasytoggleSidebar extends Plugin {
 		this.app.workspace.onLayoutReady(() => {
 			let startX = 0;
 			let threshold = 80;
-			const markdownView =
-				this.app.workspace.getActiveViewOfType(MarkdownView);
-			const editor = markdownView?.editor;
 
 			this.registerDomEvent(document, "mousedown", (evt: any) => {
 				if (evt.button === 0) {
@@ -167,8 +162,6 @@ class NewVersion extends Modal {
 		const { contentEl } = this;
 		contentEl.empty();
 		// this.plugin.settings.showInfo = false;
-		console.log("this.plugin.settings.savedVersion", this.plugin.settings.savedVersion)
-		console.log("this.plugin.manifest.version", this.plugin.manifest.version)
 		this.plugin.settings.savedVersion = this.plugin.manifest.version;
 		await this.plugin.saveSettings();
 	}
