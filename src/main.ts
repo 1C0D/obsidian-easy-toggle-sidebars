@@ -1,19 +1,24 @@
 import {
-	App,
-	Modal,
 	Plugin,
-	PluginSettingTab,
 	WorkspaceSidedock,
 } from "obsidian";
+import { NewVersion } from "./modal";
+import { ETSSettingTab } from "src/settings";
 
 interface ETSSettings {
 	// showInfo: boolean;
 	savedVersion: string
+	useRightMouse: boolean
+	useMiddleMouse: boolean
+	moveThreshold: number
 }
 
 const DEFAULT_SETTINGS: ETSSettings = {
 	// showInfo: true,
 	savedVersion: "0.0.0",
+	useRightMouse: true,
+	useMiddleMouse: true,
+	moveThreshold: 150
 };
 
 export default class EasytoggleSidebar extends Plugin {
@@ -24,9 +29,10 @@ export default class EasytoggleSidebar extends Plugin {
 
 	async onload() {
 		await this.loadSettings();
+		this.addSettingTab(new ETSSettingTab(this.app, this));
 		await this.saveSettings();
 		if (
-			this.manifest.version.split(".").map(Number) <= [1, 2, 0] &&
+			this.manifest.version.split(".").map(Number) <= [1, 3, 0] &&
 			this.settings.savedVersion !== this.manifest.version // is reinstall false
 		) {
 			new NewVersion(this.app, this).open();
@@ -34,21 +40,25 @@ export default class EasytoggleSidebar extends Plugin {
 
 		this.app.workspace.onLayoutReady(() => {
 			let startX = 0;
-			let threshold = 80;
+			
 
 			this.registerDomEvent(document, "mousedown", (evt: any) => {
+				const RMB = this.settings.useRightMouse
+				const MMB = this.settings.useMiddleMouse
 				if (evt.button === 0) {
 					return;
-				} else {
+				} else if (MMB && evt.button === 1 || RMB && evt.button === 2){
 					startX = evt.clientX;
 				}
 			});
 
 			this.registerDomEvent(document, "mouseup", (evt: any) => {
-				if (evt.button !== 0 && evt.detail === 1) {
+				const RMB = this.settings.useRightMouse
+				const MMB = this.settings.useMiddleMouse
+				if ((MMB && evt.button === 1 || RMB && evt.button === 2) && evt.detail === 1) {
 					let endX = evt.clientX;
 					let distance = Math.sqrt(Math.pow(endX - startX, 2));
-					if (distance > threshold) {
+					if (distance > this.settings.moveThreshold) {
 						this.isContextMenuPrevented = true;
 						document.addEventListener(
 							"contextmenu",
@@ -61,7 +71,7 @@ export default class EasytoggleSidebar extends Plugin {
 						}
 					}
 				}
-				if (evt.button !== 0 && evt.detail === 2) {
+				if ((MMB && evt.button === 1 || RMB && evt.button === 2) && evt.detail === 2) {
 					this.isContextMenuPrevented = true;
 					document.addEventListener(
 						"contextmenu",
@@ -139,58 +149,5 @@ export default class EasytoggleSidebar extends Plugin {
 	}
 }
 
-class NewVersion extends Modal {
-	plugin: EasytoggleSidebar;
-	constructor(app: App, plugin: EasytoggleSidebar) {
-		super(app);
-		this.plugin= plugin
-	}
-
-	onOpen() {
-		const { contentEl } = this;
-		contentEl.empty();
-		contentEl.createEl("h1", { text: "Easy toggle sidebars" });
-		contentEl.createEl("h4", { text: "About this new version:" });
-		const content = `<ul><li>You can now use rightMouseButton or midleMouseButton</li>
-				<li>There is also a command "Toggle both sidebars"</li></ul>`;
-		contentEl.createDiv("", (el: HTMLDivElement) => {
-			el.innerHTML = content;
-		});
-	}
-
-	async onClose() {
-		const { contentEl } = this;
-		contentEl.empty();
-		// this.plugin.settings.showInfo = false;
-		this.plugin.settings.savedVersion = this.plugin.manifest.version;
-		await this.plugin.saveSettings();
-	}
-}
 
 
-class ETSSettingTab extends PluginSettingTab {
-	plugin: EasytoggleSidebar;
-
-	constructor(app: App, plugin: EasytoggleSidebar) {
-		super(app, plugin);
-		this.plugin = plugin;
-	}
-
-	display(): void {
-		const { containerEl } = this;
-		containerEl.empty();
-		containerEl.createEl("h1", { text: "Easy Toggle Sidebar" });
-		const content = `<br>RightMouseButton or MiddleMouseButton :<br>
-		<ul><li>double click to toggle both sidebars </li>
-			<li>click and move toward the sideBar you want to toggle</li>
-		</ul>
-		N.B: when using rightMouse and move, try to stay in the editor.		
-		<br>
-		<hr>
-		To "toggle both sidebars", you can add your own shortcut to this command.`;
-
-		containerEl.createDiv("", (el: HTMLDivElement) => {
-			el.innerHTML = content;
-		});
-	}
-}
