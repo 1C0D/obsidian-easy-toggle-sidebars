@@ -1,5 +1,5 @@
 import { App, PluginSettingTab, Setting } from "obsidian";
-import EasytoggleSidebar from "./main";
+import EasytoggleSidebar, { DEFAULT_SETTINGS } from "./main";
 
 export class ETSSettingTab extends PluginSettingTab {
     plugin: EasytoggleSidebar;
@@ -16,11 +16,9 @@ export class ETSSettingTab extends PluginSettingTab {
         const content = `<br>With RightMouseButton or MiddleMouseButton :<br>
 		<ul><li>double click to toggle both sidebars </li>
 			<li>click and move toward the sideBar you want to toggle</li>
+            <li><strong>New</strong>: You can activate autoHide to automatically hidding opened sidebars when clicking on the editor </li>
 		</ul>
-		N.B: when using rightMouse and move, try to stay in the editor.		
-		<br>
-		<hr>
-		To "toggle both sidebars", you can add your own shortcut to this command.
+		A command "toggle both sidebars" is created so you can add your own shortcut to it.	
         <br><br>`;
 
         containerEl.createDiv("", (el: HTMLDivElement) => {
@@ -44,12 +42,11 @@ export class ETSSettingTab extends PluginSettingTab {
             .addToggle((toggle) => {
                 toggle
                     .setValue(this.plugin.settings.useMiddleMouse)
-                    .onChange((value) => {
+                    .onChange(async (value) => {
                         this.plugin.settings.useMiddleMouse = value;
-                        this.plugin.saveSettings();
+                        await this.plugin.saveSettings();
                     });
             });
-        // new Setting(containerEl)
         new Setting(containerEl)
             .setName("Move threshold in px. (default 150)")
             .setDesc("modify it only if needed")
@@ -58,11 +55,41 @@ export class ETSSettingTab extends PluginSettingTab {
                     .setLimits(50, 500, 10)
                     .setValue(this.plugin.settings.moveThreshold)
                     .setDynamicTooltip()
-                    .onChange((value) => {
+                    .onChange(async (value) => {
                         this.plugin.settings.moveThreshold = value;
-                        this.plugin.saveSettings();
+                        await this.plugin.saveSettings();
                     });
             })
+            .addExtraButton(btn => {
+                btn
+                    .setIcon("reset")
+                    .setTooltip("Reset to default")
+                    .onClick(async () => {
+                        this.plugin.settings.moveThreshold = DEFAULT_SETTINGS.moveThreshold;
+                        console.log("this.plugin.settings.moveThreshold", this.plugin.settings.moveThreshold)
+                        await this.plugin.saveSettings();
+                        this.display()
+                    });
+            });
+        new Setting(containerEl)
+            .setName("Auto hide")
+            .setDesc("Auto hide panels when clicking on the editor")
+            .addToggle((toggle) => {
+                toggle
+                    .setValue(this.plugin.settings.autoHide)
+                    .onChange(async (value) => {
+                        this.plugin.settings.autoHide = value;
+                        await this.plugin.saveSettings();
+                        if (this.plugin.settings.autoHide) {
+                            this.plugin.registerDomEvent(
+                                document,
+                                'click',
+                                this.plugin.autoHide
+                            );
+                        } else { document.removeEventListener("click", this.plugin.autoHide) }
+
+                    });
+            });
 
     }
 }

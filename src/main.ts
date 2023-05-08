@@ -11,14 +11,16 @@ interface ETSSettings {
 	useRightMouse: boolean
 	useMiddleMouse: boolean
 	moveThreshold: number
+	autoHide: boolean
 }
 
-const DEFAULT_SETTINGS: ETSSettings = {
+export const DEFAULT_SETTINGS: ETSSettings = {
 	// showInfo: true,
 	savedVersion: "0.0.0",
 	useRightMouse: true,
 	useMiddleMouse: true,
-	moveThreshold: 150
+	moveThreshold: 150,
+	autoHide: false
 };
 
 export default class EasytoggleSidebar extends Plugin {
@@ -40,14 +42,13 @@ export default class EasytoggleSidebar extends Plugin {
 
 		this.app.workspace.onLayoutReady(() => {
 			let startX = 0;
-			
 
 			this.registerDomEvent(document, "mousedown", (evt: any) => {
 				const RMB = this.settings.useRightMouse
 				const MMB = this.settings.useMiddleMouse
 				if (evt.button === 0) {
 					return;
-				} else if (MMB && evt.button === 1 || RMB && evt.button === 2){
+				} else if (MMB && evt.button === 1 || RMB && evt.button === 2) {
 					startX = evt.clientX;
 				}
 			});
@@ -88,6 +89,14 @@ export default class EasytoggleSidebar extends Plugin {
 					this.toggleBothSidebars();
 				},
 			});
+
+			if (this.settings.autoHide) {
+				this.registerDomEvent(
+					document,
+					'click',
+					this.autoHide
+				);
+			}
 		});
 	}
 
@@ -146,6 +155,18 @@ export default class EasytoggleSidebar extends Plugin {
 	isOpen(side: WorkspaceSidedock) {
 		if (side.collapsed == true) return false;
 		else return true;
+	}
+
+	autoHide = (evt: any) => {
+		const rootSplitEl = (this.app as any).workspace.rootSplit.containerEl;
+		if (!rootSplitEl.contains(evt.target)) {
+			return;
+		}
+		const leftSplit = this.app.workspace.leftSplit;
+		const rightSplit = this.app.workspace.rightSplit;
+		if (!leftSplit.collapsed || !rightSplit.collapsed) {
+			this.toggleBothSidebars()
+		}
 	}
 }
 
