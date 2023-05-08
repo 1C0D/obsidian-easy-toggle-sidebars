@@ -34,7 +34,7 @@ export default class EasytoggleSidebar extends Plugin {
 		this.addSettingTab(new ETSSettingTab(this.app, this));
 		await this.saveSettings();
 		if (
-			this.manifest.version.split(".").map(Number) <= [1, 3, 0] &&
+			this.manifest.version.split(".").map(Number) <= [1, 4, 0] &&
 			this.settings.savedVersion !== this.manifest.version // is reinstall false
 		) {
 			new NewVersion(this.app, this).open();

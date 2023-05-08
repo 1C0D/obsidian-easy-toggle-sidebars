@@ -16,7 +16,7 @@ export class ETSSettingTab extends PluginSettingTab {
         const content = `<br>With RightMouseButton or MiddleMouseButton :<br>
 		<ul><li>double click to toggle both sidebars </li>
 			<li>click and move toward the sideBar you want to toggle</li>
-            <li><strong>New</strong>: You can activate autoHide to automatically hidding opened sidebars when clicking on the editor </li>
+            <li><strong>New</strong>: You can activate autoHide to automatically hide opened sidebars when clicking on the editor </li>
 		</ul>
 		A command "toggle both sidebars" is created so you can add your own shortcut to it.	
         <br><br>`;
