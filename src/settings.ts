@@ -14,9 +14,12 @@ export class ETSSettingTab extends PluginSettingTab {
         containerEl.empty();
         containerEl.createEl("h1", { text: "Easy Toggle Sidebar" });
         const content = `<br>With RightMouseButton or MiddleMouseButton :<br>
-		<ul><li>double click to toggle both sidebars </li>
+		<ul>
+            <li>double click to toggle both sidebars </li>
 			<li>click and move toward the sideBar you want to toggle</li>
-            <li><strong>New</strong>: You can activate autoHide to automatically hide opened sidebars when clicking on the editor </li>
+            <li>you can do previous operations from the ribbon bar but using vertical moves</li>
+            <li>autoHide to automatically hide opened sidebars when clicking on the editor </li>
+            <li>autohide sidebars after reaching a Minimal editor width</li>
 		</ul>
 		A command "toggle both sidebars" is created so you can add your own shortcut to it.	
         <br><br>`;
@@ -48,7 +51,7 @@ export class ETSSettingTab extends PluginSettingTab {
                     });
             });
         new Setting(containerEl)
-            .setName("Move threshold in px. (default 150)")
+            .setName("Move threshold(px)")
             .setDesc("modify it only if needed")
             .addSlider((slider) => {
                 slider
@@ -66,7 +69,6 @@ export class ETSSettingTab extends PluginSettingTab {
                     .setTooltip("Reset to default")
                     .onClick(async () => {
                         this.plugin.settings.moveThreshold = DEFAULT_SETTINGS.moveThreshold;
-                        console.log("this.plugin.settings.moveThreshold", this.plugin.settings.moveThreshold)
                         await this.plugin.saveSettings();
                         this.display()
                     });
@@ -90,6 +92,43 @@ export class ETSSettingTab extends PluginSettingTab {
 
                     });
             });
+        new Setting(containerEl)
+			.setName("Minimal editor width")
+			.setDesc(
+				"Hide panel(s) if the proportion of the editor is less than X (threshold below) times the window size"
+			)
+			.addToggle((toggle) => {
+				toggle
+					.setValue(this.plugin.settings.autoMinRootWidth)
+					.onChange(async (value) => {
+						this.plugin.settings.autoMinRootWidth = value;
+						await this.plugin.saveSettings();
+					});
+			});
+        new Setting(containerEl)
+            .setName("Min width threshold (default 0.4)")
+            .setDesc("modify it only if needed")
+            .addSlider((slider) => {
+                slider
+                    .setLimits(200, 800, 10)
+                    .setValue(this.plugin.settings.minRootWidth)
+                    .setDynamicTooltip()
+                    .onChange(async (value) => {
+                        this.plugin.settings.minRootWidth = value;
+                        await this.plugin.saveSettings();
+                    });
+            })
+            .addExtraButton(btn => {
+                btn
+                    .setIcon("reset")
+                    .setTooltip("Reset to default")
+                    .onClick(async () => {
+                        this.plugin.settings.minRootWidth = DEFAULT_SETTINGS.minRootWidth;
+                        await this.plugin.saveSettings();
+                        this.display()
+                    });
+            });
+
 
     }
 }

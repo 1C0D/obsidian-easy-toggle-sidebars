@@ -1,78 +1,101 @@
-import {
-	Plugin,
-	WorkspaceSidedock,
-} from "obsidian";
+import { Plugin, WorkspaceSidedock } from "obsidian";
 import { NewVersion } from "./modal";
 import { ETSSettingTab } from "src/settings";
 
 interface ETSSettings {
-	// showInfo: boolean;
-	savedVersion: string
-	useRightMouse: boolean
-	useMiddleMouse: boolean
-	moveThreshold: number
-	autoHide: boolean
+	savedVersion: string;
+	useRightMouse: boolean;
+	useMiddleMouse: boolean;
+	moveThreshold: number;
+	autoHide: boolean;
+	autoMinRootWidth: boolean;
+	minRootWidth: number;
 }
 
 export const DEFAULT_SETTINGS: ETSSettings = {
-	// showInfo: true,
 	savedVersion: "0.0.0",
 	useRightMouse: true,
 	useMiddleMouse: true,
 	moveThreshold: 150,
-	autoHide: false
+	autoHide: false,
+	autoMinRootWidth: false,
+	minRootWidth: 300,
 };
 
 export default class EasytoggleSidebar extends Plugin {
-	leftSplit: WorkspaceSidedock;
-	rightSplit: WorkspaceSidedock;
 	isContextMenuPrevented = false;
 	settings: ETSSettings;
 
 	async onload() {
 		await this.loadSettings();
 		this.addSettingTab(new ETSSettingTab(this.app, this));
-		await this.saveSettings();
 		if (
-			this.manifest.version.split(".").map(Number) <= [1, 4, 0] &&
-			this.settings.savedVersion !== this.manifest.version // is reinstall false
+			this.settings.savedVersion !== "0.0.0" && // if never installed false
+			this.settings.savedVersion !== this.manifest.version // if reinstall false
 		) {
 			new NewVersion(this.app, this).open();
-		};
+		} else {
+			this.settings.savedVersion = this.manifest.version;
+		}
+		await this.saveSettings();
 
 		this.app.workspace.onLayoutReady(() => {
-			let startX = 0;
+			let startX: number;
+			let startY: number;
 
 			this.registerDomEvent(document, "mousedown", (evt: any) => {
-				const RMB = this.settings.useRightMouse
-				const MMB = this.settings.useMiddleMouse
+				const RMB = this.settings.useRightMouse;
+				const MMB = this.settings.useMiddleMouse;
 				if (evt.button === 0) {
 					return;
-				} else if (MMB && evt.button === 1 || RMB && evt.button === 2) {
+				} else if (
+					(MMB && evt.button === 1) ||
+					(RMB && evt.button === 2)
+				) {
 					startX = evt.clientX;
+					startY = evt.clientY;
 				}
 			});
 
 			this.registerDomEvent(document, "mouseup", (evt: any) => {
-				const RMB = this.settings.useRightMouse
-				const MMB = this.settings.useMiddleMouse
-				if ((MMB && evt.button === 1 || RMB && evt.button === 2) && evt.detail === 1) {
+				const RMB = this.settings.useRightMouse;
+				const MMB = this.settings.useMiddleMouse;
+				if (
+					((MMB && evt.button === 1) || (RMB && evt.button === 2)) &&
+					evt.detail === 1
+				) {
 					let endX = evt.clientX;
-					let distance = Math.sqrt(Math.pow(endX - startX, 2));
-					if (distance > this.settings.moveThreshold) {
+					let endY = evt.clientY;
+					let distanceX = Math.sqrt(Math.pow(endX - startX, 2));
+					let distanceY = Math.sqrt(Math.pow(endY - startY, 2));
+					if (
+						distanceX > this.settings.moveThreshold ||
+						distanceY > this.settings.moveThreshold
+					) {
 						this.isContextMenuPrevented = true;
 						document.addEventListener(
 							"contextmenu",
 							this.contextMenuHandler
 						);
-						if (endX < startX) {
+						if (
+							(distanceX > this.settings.moveThreshold &&
+								endX < startX) ||
+							(distanceY > this.settings.moveThreshold &&
+								endY < startY)
+						) {
 							this.toggle(this.getLeftSplit());
-						} else {
+						} else if (
+							(this.settings.moveThreshold && endX > startX) ||
+							(this.settings.moveThreshold && endY > startY)
+						) {
 							this.toggle(this.getRightSplit());
 						}
 					}
 				}
-				if ((MMB && evt.button === 1 || RMB && evt.button === 2) && evt.detail === 2) {
+				if (
+					((MMB && evt.button === 1) || (RMB && evt.button === 2)) &&
+					evt.detail === 2
+				) {
 					this.isContextMenuPrevented = true;
 					document.addEventListener(
 						"contextmenu",
@@ -91,12 +114,12 @@ export default class EasytoggleSidebar extends Plugin {
 			});
 
 			if (this.settings.autoHide) {
-				this.registerDomEvent(
-					document,
-					'click',
-					this.autoHide
-				);
+				this.registerDomEvent(document, "click", this.autoHide);
 			}
+
+			this.registerEvent(
+				(this.app as any).workspace.on("resize", () => this.onResize())
+			);
 		});
 	}
 
@@ -136,12 +159,31 @@ export default class EasytoggleSidebar extends Plugin {
 		}
 	}
 
-	getLeftSplit(): WorkspaceSidedock {
-		return this.app.workspace.leftSplit;
+	getLeftSplit() {
+		return (this.app as any).workspace.leftSplit;
 	}
 
-	getRightSplit(): WorkspaceSidedock {
-		return this.app.workspace.rightSplit;
+	getRightSplit() {
+		return (this.app as any).workspace.rightSplit;
+	}
+
+	getRootSplit() {
+		return (this.app as any).workspace.rootSplit;
+	}
+
+	onResize() {
+		const LS = this.getLeftSplit();
+		const RS = this.getRightSplit();
+		if (
+			!this.settings.autoMinRootWidth ||
+			(!this.isOpen(LS) && !this.isOpen(RS))
+		) {
+			return;
+		}
+		const editorWidth = this.getRootSplit().containerEl.clientWidth;
+		if (editorWidth < this.settings.minRootWidth) {
+			this.toggleBothSidebars();
+		}
 	}
 
 	toggle(side: WorkspaceSidedock) {
@@ -165,10 +207,7 @@ export default class EasytoggleSidebar extends Plugin {
 		const leftSplit = this.app.workspace.leftSplit;
 		const rightSplit = this.app.workspace.rightSplit;
 		if (!leftSplit.collapsed || !rightSplit.collapsed) {
-			this.toggleBothSidebars()
+			this.toggleBothSidebars();
 		}
-	}
+	};
 }
-
-
-
