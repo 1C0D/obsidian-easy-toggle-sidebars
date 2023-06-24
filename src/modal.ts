@@ -15,13 +15,11 @@ export class NewVersion extends Modal {
 		contentEl.createEl("h4", { text: "What's new:" });
 		const content = `
         <ul>
-            <li>New feature to work with canvas: detection of vertical moves to toggle sidebars from the ribbon bar.
+            <li>Fix (kind of new feature): AutoHide will only work clicking on text content/body
                 <ul>
-                    <li>Up: toggle left sidebar</li>
-                    <li>Down: toggle right sidebar</li>
-                    <li>Double click to toggle both sidebars</li>
+                    <li>Not work on canvas or graph view...</li>
+                    <li>don't interfer with tags still opening the left sidebar when clicking on it</li>
                 </ul>
-            <li>Minimal editor width: option to automatically hide sidebar(s) on window resize</li>
         </ul>
         `;
 		contentEl.createDiv("", (el: HTMLDivElement) => {
@@ -30,6 +28,8 @@ export class NewVersion extends Modal {
 		contentEl.createEl("h4", { text: "last update:" });
 		const content1 = `
         <ul>
+			<li>works with canvas: detection of vertical moves to toggle sidebars from the ribbon bar</li>
+			<li>Auto hide when resizing after a minimal editor width</li>
             <li>AutoHide: option to automatically hide opened sidebars when clicking on the editor</li>
         </ul>
         `;

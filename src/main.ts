@@ -201,13 +201,19 @@ export default class EasytoggleSidebar extends Plugin {
 
 	autoHide = (evt: any) => {
 		const rootSplitEl = (this.app as any).workspace.rootSplit.containerEl;
-		if (!rootSplitEl.contains(evt.target)) {
-			return;
-		}
-		const leftSplit = this.app.workspace.leftSplit;
-		const rightSplit = this.app.workspace.rightSplit;
-		if (!leftSplit.collapsed || !rightSplit.collapsed) {
-			this.toggleBothSidebars();
+		const clickedElement = evt.target;
+		// body content only
+		const isBody = clickedElement.classList.contains("cm-content");
+		const isLine = clickedElement.classList.contains("cm-line");
+		const isLink = clickedElement.classList.contains("cm-underline");// links
+		const isRoot = rootSplitEl.contains(clickedElement);
+		if (!isRoot) return; // || !isLine || !isBody
+		if (isLine || isBody || isLink) {
+			const leftSplit = this.app.workspace.leftSplit;
+			const rightSplit = this.app.workspace.rightSplit;
+			if (!leftSplit.collapsed || !rightSplit.collapsed) {
+				this.toggleBothSidebars();
+			}
 		}
 	};
 }
