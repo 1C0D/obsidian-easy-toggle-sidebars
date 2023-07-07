@@ -27,7 +27,7 @@ export const DEFAULT_SETTINGS: ETSSettings = {
 export default class EasytoggleSidebar extends Plugin {
 	isContextMenuPrevented = false;
 	settings: ETSSettings;
-	ribbonIconEl!: HTMLElement|null;
+	ribbonIconEl!: HTMLElement | null;
 
 	async onload() {
 		await this.loadSettings();
@@ -37,13 +37,12 @@ export default class EasytoggleSidebar extends Plugin {
 		}
 
 		if (
-			this.settings.savedVersion !== "0.0.0" && // if never installed false
-			this.settings.savedVersion !== this.manifest.version // if reinstall false
+			this.settings.savedVersion !== "0.0.0" && // never installed
+			this.settings.savedVersion !== this.manifest.version // new version
 		) {
 			new NewVersion(this.app, this).open();
-		} else {
-			this.settings.savedVersion = this.manifest.version;
 		}
+
 		await this.saveSettings();
 
 		this.app.workspace.onLayoutReady(() => {
@@ -154,8 +153,9 @@ export default class EasytoggleSidebar extends Plugin {
 
 	toggleColor() {
 		this.settings.autoHide ? this.ribbonIconEl?.addClass("ribbon-color") :
-		this.ribbonIconEl?.removeClass("ribbon-color")
-}
+			this.ribbonIconEl?.removeClass("ribbon-color")
+	}
+
 	toggleAutoHideEvent = () => {
 		if (this.settings.autoHide) {
 			this.registerDomEvent(
@@ -166,7 +166,8 @@ export default class EasytoggleSidebar extends Plugin {
 		} else {
 			document.removeEventListener("click", this.autoHide)
 		}
-	} 
+	}
+
 	contextMenuHandler = (evt: MouseEvent) => {
 		if (this.isContextMenuPrevented) {
 			evt.preventDefault();

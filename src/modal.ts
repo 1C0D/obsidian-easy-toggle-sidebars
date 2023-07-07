@@ -15,7 +15,7 @@ export class NewVersion extends Modal {
 		contentEl.createEl("h4", { text: "What's new:" });
 		const content = `
         <ul>
-            <li>A button to switch autoHide from the ribbon. green when ON
+            <li>A button ←→ to switch autoHide from the ribbon bar</li>
         </ul>
         `;
 		contentEl.createDiv("", (el: HTMLDivElement) => {
@@ -24,10 +24,9 @@ export class NewVersion extends Modal {
 		contentEl.createEl("h4", { text: "last update:" });
 		const content1 = `
         <ul>
-			<li>When in canvas, you can do vertical moves(up/down) in the ribbon bar,
-			to toggle each sidebar and a double clic to toggle them both</li>
-			<li>Auto hide when resizing after a minimal editor WIDTH</li>
-            <li>AutoHide: option to automatically hide opened sidebars when clicking on the editor</li>
+			<li>When in canvas, you can do vertical! moves(up/down) and double clic in the ribbon bar</li>
+            <li>AutoHide when clicking in the editor</li>
+			<li>hide sidebars under a minimal editor WIDTH</li>
         </ul>
         `;
 		contentEl.createDiv("", (el: HTMLDivElement) => {

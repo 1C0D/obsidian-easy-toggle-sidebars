@@ -17,11 +17,12 @@ export class ETSSettingTab extends PluginSettingTab {
 		<ul>
             <li>double click to toggle both sidebars </li>
 			<li>click and move toward the sideBar you want to toggle</li>
-            <li>you can do previous operations from the ribbon bar but using vertical moves (useful in canvas)</li>
-            <li>autoHide to automatically hide opened sidebars when clicking on the editor and a ribbon button for quick switch </li>
-            <li>autohide sidebars after reaching a Minimal editor width</li>
+            <li>you can do previous operations from the ribbon bar using double clic and vertical moves (up/down). this is useful when in canvas</li>
+            <li>autoHide to automatically hide sidebars when clicking on the editor</li>
+            <li>ribbon bar autoHide button switcher</li>
+            <li>hide sidebars under a minimal editor WIDTH</li>
 		</ul>
-		A command "toggle both sidebars" is created so you can add your own shortcut to it.	
+		Command "toggle both sidebars" added.	
         <br><br>`;
 
         containerEl.createDiv("", (el: HTMLDivElement) => {
@@ -123,8 +124,7 @@ export class ETSSettingTab extends PluginSettingTab {
             });
         
         new Setting(containerEl)
-            .setName("Min width threshold (default 0.4)")
-            .setDesc("modify it only if needed")
+            .setName("Min width threshold")
             .addSlider((slider) => {
                 slider
                     .setLimits(200, 800, 10)
