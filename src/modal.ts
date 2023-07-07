@@ -15,11 +15,7 @@ export class NewVersion extends Modal {
 		contentEl.createEl("h4", { text: "What's new:" });
 		const content = `
         <ul>
-            <li>Fix (kind of new feature): AutoHide will only work clicking on text content/body
-                <ul>
-                    <li>Not work on canvas or graph view...</li>
-                    <li>don't interfer with tags still opening the left sidebar when clicking on it</li>
-                </ul>
+            <li>A button to switch autoHide from the ribbon. green when ON
         </ul>
         `;
 		contentEl.createDiv("", (el: HTMLDivElement) => {
@@ -28,8 +24,9 @@ export class NewVersion extends Modal {
 		contentEl.createEl("h4", { text: "last update:" });
 		const content1 = `
         <ul>
-			<li>works with canvas: detection of vertical moves to toggle sidebars from the ribbon bar</li>
-			<li>Auto hide when resizing after a minimal editor width</li>
+			<li>When in canvas, you can do vertical moves(up/down) in the ribbon bar,
+			to toggle each sidebar and a double clic to toggle them both</li>
+			<li>Auto hide when resizing after a minimal editor WIDTH</li>
             <li>AutoHide: option to automatically hide opened sidebars when clicking on the editor</li>
         </ul>
         `;
@@ -41,7 +38,6 @@ export class NewVersion extends Modal {
 	async onClose() {
 		const { contentEl } = this;
 		contentEl.empty();
-		// this.plugin.settings.showInfo = false;
 		this.plugin.settings.savedVersion = this.plugin.manifest.version;
 		await this.plugin.saveSettings();
 	}

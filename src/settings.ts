@@ -1,4 +1,4 @@
-import { App, PluginSettingTab, Setting } from "obsidian";
+import { App, Notice, PluginSettingTab, Setting } from "obsidian";
 import EasytoggleSidebar, { DEFAULT_SETTINGS } from "./main";
 
 export class ETSSettingTab extends PluginSettingTab {
@@ -17,8 +17,8 @@ export class ETSSettingTab extends PluginSettingTab {
 		<ul>
             <li>double click to toggle both sidebars </li>
 			<li>click and move toward the sideBar you want to toggle</li>
-            <li>you can do previous operations from the ribbon bar but using vertical moves</li>
-            <li>autoHide to automatically hide opened sidebars when clicking on the editor </li>
+            <li>you can do previous operations from the ribbon bar but using vertical moves (useful in canvas)</li>
+            <li>autoHide to automatically hide opened sidebars when clicking on the editor and a ribbon button for quick switch </li>
             <li>autohide sidebars after reaching a Minimal editor width</li>
 		</ul>
 		A command "toggle both sidebars" is created so you can add your own shortcut to it.	
@@ -39,6 +39,7 @@ export class ETSSettingTab extends PluginSettingTab {
                         this.plugin.saveSettings();
                     });
             });
+        
         new Setting(containerEl)
             .setName("Middle Mouse")
             .setDesc("Activates Right Mouse to trigger operations")
@@ -50,6 +51,7 @@ export class ETSSettingTab extends PluginSettingTab {
                         await this.plugin.saveSettings();
                     });
             });
+        
         new Setting(containerEl)
             .setName("Move threshold(px)")
             .setDesc("modify it only if needed")
@@ -73,6 +75,26 @@ export class ETSSettingTab extends PluginSettingTab {
                         this.display()
                     });
             });
+        
+        new Setting(containerEl)
+            .setName("Ribbon Button for autoHide")
+            .setDesc("Ribbon icon to switch autoHide")
+            .addToggle((toggle) => {
+                toggle
+                    .setValue(this.plugin.settings.autoHideRibbon)
+                    .onChange(async (value) => {
+                        this.plugin.settings.autoHideRibbon = value;
+                        await this.plugin.saveSettings();
+                        if (this.plugin.settings.autoHideRibbon) {
+                            this.plugin.autoHideON()
+                            await this.plugin.saveSettings();
+                        } else {
+                            this.plugin.ribbonIconEl?.remove()
+                            this.plugin.ribbonIconEl = null;
+                        }
+                    });
+            });
+        
         new Setting(containerEl)
             .setName("Auto hide")
             .setDesc("Auto hide panels when clicking on the editor")
@@ -81,30 +103,25 @@ export class ETSSettingTab extends PluginSettingTab {
                     .setValue(this.plugin.settings.autoHide)
                     .onChange(async (value) => {
                         this.plugin.settings.autoHide = value;
+                        this.plugin.toggleAutoHideEvent()
                         await this.plugin.saveSettings();
-                        if (this.plugin.settings.autoHide) {
-                            this.plugin.registerDomEvent(
-                                document,
-                                'click',
-                                this.plugin.autoHide
-                            );
-                        } else { document.removeEventListener("click", this.plugin.autoHide) }
-
                     });
             });
+
         new Setting(containerEl)
-			.setName("Minimal editor width")
-			.setDesc(
-				"Hide panel(s) if the proportion of the editor is less than X (threshold below) times the window size"
-			)
-			.addToggle((toggle) => {
-				toggle
-					.setValue(this.plugin.settings.autoMinRootWidth)
-					.onChange(async (value) => {
-						this.plugin.settings.autoMinRootWidth = value;
-						await this.plugin.saveSettings();
-					});
-			});
+            .setName("Minimal editor width")
+            .setDesc(
+                "Hide panel(s) if the proportion of the editor is less than X (threshold below) times the window size"
+            )
+            .addToggle((toggle) => {
+                toggle
+                    .setValue(this.plugin.settings.autoMinRootWidth)
+                    .onChange(async (value) => {
+                        this.plugin.settings.autoMinRootWidth = value;
+                        await this.plugin.saveSettings();
+                    });
+            });
+        
         new Setting(containerEl)
             .setName("Min width threshold (default 0.4)")
             .setDesc("modify it only if needed")
@@ -129,6 +146,6 @@ export class ETSSettingTab extends PluginSettingTab {
                     });
             });
 
-
     }
 }
+

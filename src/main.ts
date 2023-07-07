@@ -1,4 +1,4 @@
-import { Plugin, WorkspaceSidedock } from "obsidian";
+import { Notice, Plugin, WorkspaceSidedock } from "obsidian";
 import { NewVersion } from "./modal";
 import { ETSSettingTab } from "src/settings";
 
@@ -8,6 +8,7 @@ interface ETSSettings {
 	useMiddleMouse: boolean;
 	moveThreshold: number;
 	autoHide: boolean;
+	autoHideRibbon: boolean;
 	autoMinRootWidth: boolean;
 	minRootWidth: number;
 }
@@ -18,6 +19,7 @@ export const DEFAULT_SETTINGS: ETSSettings = {
 	useMiddleMouse: true,
 	moveThreshold: 150,
 	autoHide: false,
+	autoHideRibbon: true,
 	autoMinRootWidth: false,
 	minRootWidth: 300,
 };
@@ -25,10 +27,15 @@ export const DEFAULT_SETTINGS: ETSSettings = {
 export default class EasytoggleSidebar extends Plugin {
 	isContextMenuPrevented = false;
 	settings: ETSSettings;
+	ribbonIconEl!: HTMLElement|null;
 
 	async onload() {
 		await this.loadSettings();
 		this.addSettingTab(new ETSSettingTab(this.app, this));
+		if (this.settings.autoHideRibbon) {
+			this.autoHideON()
+		}
+
 		if (
 			this.settings.savedVersion !== "0.0.0" && // if never installed false
 			this.settings.savedVersion !== this.manifest.version // if reinstall false
@@ -135,6 +142,31 @@ export default class EasytoggleSidebar extends Plugin {
 		await this.saveData(this.settings);
 	}
 
+	autoHideON = () => {
+		this.ribbonIconEl = this.addRibbonIcon('move-horizontal', 'autoHide switcher', async () => {
+			this.settings.autoHide = !this.settings.autoHide;
+			this.toggleAutoHideEvent()
+			this.toggleColor()
+			new Notice(this.settings.autoHide ? 'AutoHide Enabled' : 'AutoHide Disabled');
+		});
+		this.toggleColor()
+	}
+
+	toggleColor() {
+		this.settings.autoHide ? this.ribbonIconEl?.addClass("ribbon-color") :
+		this.ribbonIconEl?.removeClass("ribbon-color")
+}
+	toggleAutoHideEvent = () => {
+		if (this.settings.autoHide) {
+			this.registerDomEvent(
+				document,
+				'click',
+				this.autoHide
+			);
+		} else {
+			document.removeEventListener("click", this.autoHide)
+		}
+	} 
 	contextMenuHandler = (evt: MouseEvent) => {
 		if (this.isContextMenuPrevented) {
 			evt.preventDefault();
@@ -207,7 +239,7 @@ export default class EasytoggleSidebar extends Plugin {
 		const isLine = clickedElement.classList.contains("cm-line");
 		const isLink = clickedElement.classList.contains("cm-underline");// links
 		const isRoot = rootSplitEl.contains(clickedElement);
-		if (!isRoot) return; // || !isLine || !isBody
+		if (!isRoot) return;
 		if (isLine || isBody || isLink) {
 			const leftSplit = this.app.workspace.leftSplit;
 			const rightSplit = this.app.workspace.rightSplit;
