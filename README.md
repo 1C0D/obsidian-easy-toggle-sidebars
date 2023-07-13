@@ -9,10 +9,7 @@ With RightMouseButton or MiddleMouseButton :
 - if the editor width reach a minimal value, it reduces sidebars to their minimal size, and if it is still not enough, then sidebars are hidden.  
 - Command "toggle both sidebars" added.	
     
-![demo](toggle-panels.gif)
-  
-autoHide with editor witdh
-![minWidth](minWidth.gif)
+![demo](gifDemo.gif)
   
 settings
 ![settings](settings.jpg)
