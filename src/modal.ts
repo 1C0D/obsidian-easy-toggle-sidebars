@@ -13,25 +13,7 @@ export class NewVersion extends Modal {
 		contentEl.empty();
 		contentEl.createEl("h1", { text: "Easy toggle sidebars" });
 		contentEl.createEl("h4", { text: "What's new:" });
-		const content = `
-        <ul>
-            <li>A button ←→ to switch autoHide from the ribbon bar</li>
-        </ul>
-        `;
-		contentEl.createDiv("", (el: HTMLDivElement) => {
-			el.innerHTML = content;
-		});
-		contentEl.createEl("h4", { text: "last update:" });
-		const content1 = `
-        <ul>
-			<li>When in canvas, you can do vertical! moves(up/down) and double clic in the ribbon bar</li>
-            <li>AutoHide when clicking in the editor</li>
-			<li>hide sidebars under a minimal editor WIDTH</li>
-        </ul>
-        `;
-		contentEl.createDiv("", (el: HTMLDivElement) => {
-			el.innerHTML = content1;
-		});
+		contentEl.createDiv({text:"Autohide on window resize Evolves. If the editor width become too small, sidebars will be reduced to their minimal width (200px). If it is still too small, sidebars will be hidden. Little bug on ribbon color fixed."});
 	}
 
 	async onClose() {

@@ -105,6 +105,7 @@ export class ETSSettingTab extends PluginSettingTab {
                     .onChange(async (value) => {
                         this.plugin.settings.autoHide = value;
                         this.plugin.toggleAutoHideEvent()
+                        this.plugin.toggleColor()
                         await this.plugin.saveSettings();
                     });
             });

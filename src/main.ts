@@ -32,29 +32,20 @@ export default class EasytoggleSidebar extends Plugin {
 	async onload() {
 		await this.loadSettings();
 		this.addSettingTab(new ETSSettingTab(this.app, this));
+		this.updateInfo()
 		if (this.settings.autoHideRibbon) {
 			this.autoHideON()
 		}
-
-		if (
-			this.settings.savedVersion !== "0.0.0" && // never installed
-			this.settings.savedVersion !== this.manifest.version // new version
-		) {
-			new NewVersion(this.app, this).open();
-		}
-
-		await this.saveSettings();
 
 		this.app.workspace.onLayoutReady(() => {
 			let startX: number;
 			let startY: number;
 
-			this.registerDomEvent(document, "mousedown", (evt: any) => {
+			this.registerDomEvent(document, "mousedown", (evt: MouseEvent) => {
+				if (evt.button === 0) return;
 				const RMB = this.settings.useRightMouse;
 				const MMB = this.settings.useMiddleMouse;
-				if (evt.button === 0) {
-					return;
-				} else if (
+				if (
 					(MMB && evt.button === 1) ||
 					(RMB && evt.button === 2)
 				) {
@@ -63,7 +54,7 @@ export default class EasytoggleSidebar extends Plugin {
 				}
 			});
 
-			this.registerDomEvent(document, "mouseup", (evt: any) => {
+			this.registerDomEvent(document, "mouseup", (evt: MouseEvent) => {
 				const RMB = this.settings.useRightMouse;
 				const MMB = this.settings.useMiddleMouse;
 				if (
@@ -102,11 +93,13 @@ export default class EasytoggleSidebar extends Plugin {
 					((MMB && evt.button === 1) || (RMB && evt.button === 2)) &&
 					evt.detail === 2
 				) {
-					this.isContextMenuPrevented = true;
-					document.addEventListener(
-						"contextmenu",
-						this.contextMenuHandler
-					);
+					if (evt.button === 2) {
+						this.isContextMenuPrevented = true;
+						document.addEventListener(
+							"contextmenu",
+							this.contextMenuHandler
+						);
+					}
 					this.toggleBothSidebars();
 				}
 			});
@@ -141,9 +134,21 @@ export default class EasytoggleSidebar extends Plugin {
 		await this.saveData(this.settings);
 	}
 
+	async updateInfo() {
+		if (
+			this.settings.savedVersion !== "0.0.0" && // never installed
+			this.settings.savedVersion !== this.manifest.version // new version
+		) {
+			new NewVersion(this.app, this).open();
+		}
+
+		await this.saveSettings();
+	}
+
 	autoHideON = () => {
 		this.ribbonIconEl = this.addRibbonIcon('move-horizontal', 'autoHide switcher', async () => {
 			this.settings.autoHide = !this.settings.autoHide;
+			await this.saveSettings()
 			this.toggleAutoHideEvent()
 			this.toggleColor()
 			new Notice(this.settings.autoHide ? 'AutoHide Enabled' : 'AutoHide Disabled');
@@ -214,8 +219,23 @@ export default class EasytoggleSidebar extends Plugin {
 			return;
 		}
 		const editorWidth = this.getRootSplit().containerEl.clientWidth;
+		let keepOn = false
 		if (editorWidth < this.settings.minRootWidth) {
-			this.toggleBothSidebars();
+			const leftSplit = document.querySelector('.mod-left-split') as HTMLElement;
+			const rightSplit = document.querySelector('.mod-right-split') as HTMLElement;
+			if (LS.containerEl.clientWidth > 200) {
+				leftSplit.style.width = '200px';
+			}
+			if (RS.containerEl.clientWidth > 200) {
+				rightSplit.style.width = '200px';
+			}
+			keepOn = true
+		}
+		if (keepOn) {
+			const updatedEditorWidth = this.getRootSplit().containerEl.clientWidth;
+			if (updatedEditorWidth < this.settings.minRootWidth) {
+				this.toggleBothSidebars();
+			}
 		}
 	}
 
@@ -235,7 +255,7 @@ export default class EasytoggleSidebar extends Plugin {
 	autoHide = (evt: any) => {
 		const rootSplitEl = (this.app as any).workspace.rootSplit.containerEl;
 		const clickedElement = evt.target;
-		// body content only
+		//Root body content only
 		const isBody = clickedElement.classList.contains("cm-content");
 		const isLine = clickedElement.classList.contains("cm-line");
 		const isLink = clickedElement.classList.contains("cm-underline");// links
