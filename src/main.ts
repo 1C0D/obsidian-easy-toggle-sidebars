@@ -1,5 +1,4 @@
 import { Notice, Plugin, WorkspaceSidedock } from "obsidian";
-import { NewVersion } from "./modal";
 import { ETSSettingTab } from "src/settings";
 
 interface ETSSettings {
@@ -38,7 +37,7 @@ export default class EasytoggleSidebar extends Plugin {
 
 		this.app.workspace.onLayoutReady(() => {
 			this.registerDomEvent(document, "mousedown", this.mousedownHandler)
-			
+
 			this.registerDomEvent(document, "mouseup", this.mouseupHandler);
 
 			this.addCommand({
@@ -72,7 +71,7 @@ export default class EasytoggleSidebar extends Plugin {
 		}
 	};
 
-	mouseupHandler = (evt: MouseEvent) => { 
+	mouseupHandler = (evt: MouseEvent) => {
 		const RMB = this.settings.useRightMouse;
 		const MMB = this.settings.useMiddleMouse;
 		if (
