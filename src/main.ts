@@ -28,6 +28,8 @@ export default class EasytoggleSidebar extends Plugin {
 	isContextMenuPrevented = false;
 	settings: ETSSettings;
 	ribbonIconEl!: HTMLElement | null;
+	startX: number;
+	startY: number;
 
 	async onload() {
 		await this.loadSettings();
@@ -38,71 +40,9 @@ export default class EasytoggleSidebar extends Plugin {
 		}
 
 		this.app.workspace.onLayoutReady(() => {
-			let startX: number;
-			let startY: number;
-
-			this.registerDomEvent(document, "mousedown", (evt: MouseEvent) => {
-				if (evt.button === 0) return;
-				const RMB = this.settings.useRightMouse;
-				const MMB = this.settings.useMiddleMouse;
-				if (
-					(MMB && evt.button === 1) ||
-					(RMB && evt.button === 2)
-				) {
-					startX = evt.clientX;
-					startY = evt.clientY;
-				}
-			});
-
-			this.registerDomEvent(document, "mouseup", (evt: MouseEvent) => {
-				const RMB = this.settings.useRightMouse;
-				const MMB = this.settings.useMiddleMouse;
-				if (
-					((MMB && evt.button === 1) || (RMB && evt.button === 2)) &&
-					evt.detail === 1
-				) {
-					let endX = evt.clientX;
-					let endY = evt.clientY;
-					let distanceX = Math.sqrt(Math.pow(endX - startX, 2));
-					let distanceY = Math.sqrt(Math.pow(endY - startY, 2));
-					if (
-						distanceX > this.settings.moveThreshold ||
-						distanceY > this.settings.moveThreshold
-					) {
-						this.isContextMenuPrevented = true;
-						document.addEventListener(
-							"contextmenu",
-							this.contextMenuHandler
-						);
-						if (
-							(distanceX > this.settings.moveThreshold &&
-								endX < startX) ||
-							(distanceY > this.settings.moveThreshold &&
-								endY < startY)
-						) {
-							this.toggle(this.getLeftSplit());
-						} else if (
-							(this.settings.moveThreshold && endX > startX) ||
-							(this.settings.moveThreshold && endY > startY)
-						) {
-							this.toggle(this.getRightSplit());
-						}
-					}
-				}
-				if (
-					((MMB && evt.button === 1) || (RMB && evt.button === 2)) &&
-					evt.detail === 2
-				) {
-					if (evt.button === 2) {
-						this.isContextMenuPrevented = true;
-						document.addEventListener(
-							"contextmenu",
-							this.contextMenuHandler
-						);
-					}
-					this.toggleBothSidebars();
-				}
-			});
+			this.registerDomEvent(document, "mousedown", this.mousedownHandler)
+			
+			this.registerDomEvent(document, "mouseup", this.mouseupHandler);
 
 			this.addCommand({
 				id: "toggle-both-sidebars",
@@ -122,16 +62,67 @@ export default class EasytoggleSidebar extends Plugin {
 		});
 	}
 
-	async loadSettings() {
-		this.settings = Object.assign(
-			{},
-			DEFAULT_SETTINGS,
-			await this.loadData()
-		);
-	}
+	mousedownHandler = (evt: MouseEvent) => {
+		if (evt.button === 0) return;
+		const RMB = this.settings.useRightMouse;
+		const MMB = this.settings.useMiddleMouse;
+		if (
+			(MMB && evt.button === 1) ||
+			(RMB && evt.button === 2)
+		) {
+			this.startX = evt.clientX;
+			this.startY = evt.clientY;
+		}
+	};
 
-	async saveSettings() {
-		await this.saveData(this.settings);
+	mouseupHandler = (evt: MouseEvent) => { 
+		const RMB = this.settings.useRightMouse;
+		const MMB = this.settings.useMiddleMouse;
+		if (
+			((MMB && evt.button === 1) || (RMB && evt.button === 2)) &&
+			evt.detail === 1
+		) {
+			let endX = evt.clientX;
+			let endY = evt.clientY;
+			let distanceX = Math.sqrt(Math.pow(endX - this.startX, 2));
+			let distanceY = Math.sqrt(Math.pow(endY - this.startY, 2));
+			if (
+				distanceX > this.settings.moveThreshold ||
+				distanceY > this.settings.moveThreshold
+			) {
+				this.isContextMenuPrevented = true;
+				document.addEventListener(
+					"contextmenu",
+					this.contextMenuHandler
+				);
+				if (
+					(distanceX > this.settings.moveThreshold &&
+						endX < this.startX) ||
+					(distanceY > this.settings.moveThreshold &&
+						endY < this.startY)
+				) {
+					this.toggle(this.getLeftSplit());
+				} else if (
+					(this.settings.moveThreshold && endX > this.startX) ||
+					(this.settings.moveThreshold && endY > this.startY)
+				) {
+					this.toggle(this.getRightSplit());
+				}
+			}
+		}
+		if (
+			((MMB && evt.button === 1) || (RMB && evt.button === 2)) &&
+			evt.detail === 2
+		) {
+			if (evt.button === 2) {
+				this.isContextMenuPrevented = true;
+				document.addEventListener(
+					"contextmenu",
+					this.contextMenuHandler
+				);
+			}
+			this.toggleBothSidebars();
+		}
 	}
 
 	async updateInfo() {
@@ -269,4 +260,16 @@ export default class EasytoggleSidebar extends Plugin {
 			}
 		}
 	};
+
+	async loadSettings() {
+		this.settings = Object.assign(
+			{},
+			DEFAULT_SETTINGS,
+			await this.loadData()
+		);
+	}
+
+	async saveSettings() {
+		await this.saveData(this.settings);
+	}
 }
