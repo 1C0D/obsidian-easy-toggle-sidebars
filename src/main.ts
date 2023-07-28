@@ -3,7 +3,6 @@ import { NewVersion } from "./modal";
 import { ETSSettingTab } from "src/settings";
 
 interface ETSSettings {
-	savedVersion: string;
 	useRightMouse: boolean;
 	useMiddleMouse: boolean;
 	moveThreshold: number;
@@ -14,7 +13,6 @@ interface ETSSettings {
 }
 
 export const DEFAULT_SETTINGS: ETSSettings = {
-	savedVersion: "0.0.0",
 	useRightMouse: true,
 	useMiddleMouse: true,
 	moveThreshold: 150,
@@ -34,7 +32,6 @@ export default class EasytoggleSidebar extends Plugin {
 	async onload() {
 		await this.loadSettings();
 		this.addSettingTab(new ETSSettingTab(this.app, this));
-		this.updateInfo()
 		if (this.settings.autoHideRibbon) {
 			this.autoHideON()
 		}
@@ -123,17 +120,6 @@ export default class EasytoggleSidebar extends Plugin {
 			}
 			this.toggleBothSidebars();
 		}
-	}
-
-	async updateInfo() {
-		if (
-			this.settings.savedVersion !== "0.0.0" && // never installed
-			this.settings.savedVersion !== this.manifest.version // new version
-		) {
-			new NewVersion(this.app, this).open();
-		}
-
-		await this.saveSettings();
 	}
 
 	autoHideON = () => {
