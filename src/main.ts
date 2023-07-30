@@ -1,5 +1,6 @@
 import { Notice, Plugin, WorkspaceSidedock } from "obsidian";
 import { ETSSettingTab } from "src/settings";
+import { EditorView } from '@codemirror/view';
 
 interface ETSSettings {
 	useRightMouse: boolean;
@@ -60,8 +61,9 @@ export default class EasytoggleSidebar extends Plugin {
 
 	mousedownHandler = (evt: MouseEvent) => {
 		if (evt.button === 0) return;
-		const RMB = this.settings.useRightMouse;
-		const MMB = this.settings.useMiddleMouse;
+		const { settings } = this
+		const RMB = settings.useRightMouse;
+		const MMB = settings.useMiddleMouse;
 		if (
 			(MMB && evt.button === 1) ||
 			(RMB && evt.button === 2)
@@ -72,8 +74,9 @@ export default class EasytoggleSidebar extends Plugin {
 	};
 
 	mouseupHandler = (evt: MouseEvent) => {
-		const RMB = this.settings.useRightMouse;
-		const MMB = this.settings.useMiddleMouse;
+		const { settings } = this
+		const RMB = settings.useRightMouse;
+		const MMB = settings.useMiddleMouse;
 		if (
 			((MMB && evt.button === 1) || (RMB && evt.button === 2)) &&
 			evt.detail === 1
@@ -83,8 +86,8 @@ export default class EasytoggleSidebar extends Plugin {
 			let distanceX = Math.sqrt(Math.pow(endX - this.startX, 2));
 			let distanceY = Math.sqrt(Math.pow(endY - this.startY, 2));
 			if (
-				distanceX > this.settings.moveThreshold ||
-				distanceY > this.settings.moveThreshold
+				distanceX > settings.moveThreshold ||
+				distanceY > settings.moveThreshold
 			) {
 				this.isContextMenuPrevented = true;
 				document.addEventListener(
@@ -92,15 +95,15 @@ export default class EasytoggleSidebar extends Plugin {
 					this.contextMenuHandler
 				);
 				if (
-					(distanceX > this.settings.moveThreshold &&
+					(distanceX > settings.moveThreshold &&
 						endX < this.startX) ||
-					(distanceY > this.settings.moveThreshold &&
+					(distanceY > settings.moveThreshold &&
 						endY < this.startY)
 				) {
 					this.toggle(this.getLeftSplit());
 				} else if (
-					(this.settings.moveThreshold && endX > this.startX) ||
-					(this.settings.moveThreshold && endY > this.startY)
+					(settings.moveThreshold && endX > this.startX) ||
+					(settings.moveThreshold && endY > this.startY)
 				) {
 					this.toggle(this.getRightSplit());
 				}
@@ -122,12 +125,13 @@ export default class EasytoggleSidebar extends Plugin {
 	}
 
 	autoHideON = () => {
+		const { settings } = this
 		this.ribbonIconEl = this.addRibbonIcon('move-horizontal', 'autoHide switcher', async () => {
-			this.settings.autoHide = !this.settings.autoHide;
+			settings.autoHide = !settings.autoHide;
 			await this.saveSettings()
 			this.toggleAutoHideEvent()
 			this.toggleColor()
-			new Notice(this.settings.autoHide ? 'AutoHide Enabled' : 'AutoHide Disabled');
+			new Notice(settings.autoHide ? 'AutoHide Enabled' : 'AutoHide Disabled');
 		});
 		this.toggleColor()
 	}
@@ -188,28 +192,28 @@ export default class EasytoggleSidebar extends Plugin {
 	onResize() {
 		const LS = this.getLeftSplit();
 		const RS = this.getRightSplit();
+		const { settings } = this
+		const { minRootWidth } = settings
+
 		if (
-			!this.settings.autoMinRootWidth ||
+			!settings.autoMinRootWidth ||
 			(!this.isOpen(LS) && !this.isOpen(RS))
 		) {
 			return;
 		}
 		const editorWidth = this.getRootSplit().containerEl.clientWidth;
-		let keepOn = false
-		if (editorWidth < this.settings.minRootWidth) {
-			const leftSplit = document.querySelector('.mod-left-split') as HTMLElement;
-			const rightSplit = document.querySelector('.mod-right-split') as HTMLElement;
+		if (editorWidth < minRootWidth) {
 			if (LS.containerEl.clientWidth > 200) {
-				leftSplit.style.width = '200px';
+				LS.setSize(200)
 			}
 			if (RS.containerEl.clientWidth > 200) {
-				rightSplit.style.width = '200px';
+				RS.setSize(200)
 			}
-			keepOn = true
+			
 		}
-		if (keepOn) {
+		if (editorWidth < minRootWidth) {
 			const updatedEditorWidth = this.getRootSplit().containerEl.clientWidth;
-			if (updatedEditorWidth < this.settings.minRootWidth) {
+			if (updatedEditorWidth < minRootWidth) {
 				this.toggleBothSidebars();
 			}
 		}
@@ -229,7 +233,8 @@ export default class EasytoggleSidebar extends Plugin {
 	}
 
 	autoHide = (evt: any) => {
-		const rootSplitEl = (this.app as any).workspace.rootSplit.containerEl;
+		const { app: { workspace } } = this as any
+		const rootSplitEl = workspace.rootSplit.containerEl;
 		const clickedElement = evt.target;
 		//Root body content only
 		const isBody = clickedElement.classList.contains("cm-content");
@@ -238,8 +243,8 @@ export default class EasytoggleSidebar extends Plugin {
 		const isRoot = rootSplitEl.contains(clickedElement);
 		if (!isRoot) return;
 		if (isLine || isBody || isLink) {
-			const leftSplit = this.app.workspace.leftSplit;
-			const rightSplit = this.app.workspace.rightSplit;
+			const leftSplit = workspace.leftSplit;
+			const rightSplit = workspace.rightSplit;
 			if (!leftSplit.collapsed || !rightSplit.collapsed) {
 				this.toggleBothSidebars();
 			}
