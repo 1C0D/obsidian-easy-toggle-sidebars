@@ -1,4 +1,4 @@
-import { App, Notice, PluginSettingTab, Setting } from "obsidian";
+import { App, PluginSettingTab, Setting } from "obsidian";
 import EasytoggleSidebar, { DEFAULT_SETTINGS } from "./main";
 
 export class ETSSettingTab extends PluginSettingTab {

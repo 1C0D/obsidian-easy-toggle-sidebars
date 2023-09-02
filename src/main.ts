@@ -1,6 +1,5 @@
 import { Notice, Plugin, WorkspaceSidedock } from "obsidian";
-import { ETSSettingTab } from "src/settings";
-import { EditorView } from '@codemirror/view';
+import { ETSSettingTab } from "./settings";
 
 interface ETSSettings {
 	useRightMouse: boolean;
