@@ -1,4 +1,4 @@
-import { Notice, Plugin, WorkspaceSidedock } from "obsidian";
+import { Notice, Plugin, View, WorkspaceSidedock } from "obsidian";
 import { ETSSettingTab } from "./settings";
 
 interface ETSSettings {
@@ -25,19 +25,21 @@ export default class EasytoggleSidebar extends Plugin {
 	isContextMenuPrevented = false;
 	settings: ETSSettings;
 	ribbonIconEl!: HTMLElement | null;
-	startX: number;
-	startY: number;
+	private startX: number;
+	private startY: number;
+	isTracking = false;
+	moved = true;
 
 	async onload() {
 		await this.loadSettings();
 		this.addSettingTab(new ETSSettingTab(this.app, this));
 		if (this.settings.autoHideRibbon) {
-			this.autoHideON()
+			this.autoHideON();
 		}
 
 		this.app.workspace.onLayoutReady(() => {
-			this.registerDomEvent(document, "mousedown", this.mousedownHandler)
-
+			this.registerDomEvent(document, "mousedown", this.mousedownHandler);
+			this.registerDomEvent(document, "mousemove", this.mousemoveHandler);
 			this.registerDomEvent(document, "mouseup", this.mouseupHandler);
 
 			this.addCommand({
@@ -59,21 +61,58 @@ export default class EasytoggleSidebar extends Plugin {
 	}
 
 	mousedownHandler = (evt: MouseEvent) => {
+		window.removeEventListener(
+			"contextmenu",
+			this.contextmenuHandler,
+			true
+		);
 		if (evt.button === 0) return;
-		const { settings } = this
+		const { settings } = this;
 		const RMB = settings.useRightMouse;
 		const MMB = settings.useMiddleMouse;
-		if (
-			(MMB && evt.button === 1) ||
-			(RMB && evt.button === 2)
-		) {
+		if ((MMB && evt.button === 1) || (RMB && evt.button === 2)) {
 			this.startX = evt.clientX;
 			this.startY = evt.clientY;
+			this.isTracking = true;
+		}
+	};
+
+	mousemoveHandler = (e: MouseEvent) => {
+		if (this.isTracking) {
+			const { settings } = this;
+			const endX = e.clientX;
+			const endY = e.clientY;
+
+			const distanceX = Math.abs(endX - this.startX);
+			const distanceY = Math.abs(endY - this.startY);
+
+			if (
+				distanceX >= settings.moveThreshold ||
+				distanceY >= settings.moveThreshold
+			) {
+				window.addEventListener(
+					"contextmenu",
+					this.contextmenuHandler,
+					true
+				);
+				this.moved = true;
+			} else {
+				this.moved = false;
+			}
 		}
 	};
 
 	mouseupHandler = (evt: MouseEvent) => {
-		const { settings } = this
+		if (!this.moved) {
+			window.removeEventListener(
+				"contextmenu",
+				this.contextmenuHandler,
+				true
+			);
+			return;
+		}
+
+		const { settings } = this;
 		const RMB = settings.useRightMouse;
 		const MMB = settings.useMiddleMouse;
 		if (
@@ -82,85 +121,68 @@ export default class EasytoggleSidebar extends Plugin {
 		) {
 			let endX = evt.clientX;
 			let endY = evt.clientY;
-			let distanceX = Math.sqrt(Math.pow(endX - this.startX, 2));
-			let distanceY = Math.sqrt(Math.pow(endY - this.startY, 2));
-			if (
-				distanceX > settings.moveThreshold ||
-				distanceY > settings.moveThreshold
+
+			if (endX < this.startX || endY < this.startY) {
+				this.toggle(this.getLeftSplit());
+			} else if (
+				(settings.moveThreshold && endX > this.startX) ||
+				(settings.moveThreshold && endY > this.startY)
 			) {
-				this.isContextMenuPrevented = true;
-				document.addEventListener(
-					"contextmenu",
-					this.contextMenuHandler
-				);
-				if (
-					(distanceX > settings.moveThreshold &&
-						endX < this.startX) ||
-					(distanceY > settings.moveThreshold &&
-						endY < this.startY)
-				) {
-					this.toggle(this.getLeftSplit());
-				} else if (
-					(settings.moveThreshold && endX > this.startX) ||
-					(settings.moveThreshold && endY > this.startY)
-				) {
-					this.toggle(this.getRightSplit());
-				}
+				this.toggle(this.getRightSplit());
 			}
 		}
 		if (
 			((MMB && evt.button === 1) || (RMB && evt.button === 2)) &&
 			evt.detail === 2
 		) {
-			if (evt.button === 2) {
-				this.isContextMenuPrevented = true;
-				document.addEventListener(
-					"contextmenu",
-					this.contextMenuHandler
-				);
-			}
 			this.toggleBothSidebars();
 		}
-	}
+		this.moved = false;
+	};
 
 	autoHideON = () => {
-		const { settings } = this
-		this.ribbonIconEl = this.addRibbonIcon('move-horizontal', 'autoHide switcher', async () => {
-			settings.autoHide = !settings.autoHide;
-			await this.saveSettings()
-			this.toggleAutoHideEvent()
-			this.toggleColor()
-			new Notice(settings.autoHide ? 'AutoHide Enabled' : 'AutoHide Disabled');
-		});
-		this.toggleColor()
-	}
+		const { settings } = this;
+		this.ribbonIconEl = this.addRibbonIcon(
+			"move-horizontal",
+			"autoHide switcher",
+			async () => {
+				settings.autoHide = !settings.autoHide;
+				await this.saveSettings();
+				this.toggleAutoHideEvent();
+				this.toggleColor();
+				new Notice(
+					settings.autoHide ? "AutoHide Enabled" : "AutoHide Disabled"
+				);
+			}
+		);
+		this.toggleColor();
+	};
 
 	toggleColor() {
-		this.settings.autoHide ? this.ribbonIconEl?.addClass("ribbon-color") :
-			this.ribbonIconEl?.removeClass("ribbon-color")
+		this.settings.autoHide
+			? this.ribbonIconEl?.addClass("ribbon-color")
+			: this.ribbonIconEl?.removeClass("ribbon-color");
 	}
 
 	toggleAutoHideEvent = () => {
 		if (this.settings.autoHide) {
-			this.registerDomEvent(
-				document,
-				'click',
-				this.autoHide
-			);
+			this.registerDomEvent(document, "click", this.autoHide);
 		} else {
-			document.removeEventListener("click", this.autoHide)
+			document.removeEventListener("click", this.autoHide);
 		}
+	};
+
+	contextmenuHandler(evt: MouseEvent) {
+		evt.preventDefault();
+		// evt.stopPropagation();
 	}
 
 	contextMenuHandler = (evt: MouseEvent) => {
-		if (this.isContextMenuPrevented) {
-			evt.preventDefault();
-			this.isContextMenuPrevented = false;
-			document.removeEventListener(
-				"contextmenu",
-				this.contextMenuHandler
-			);
-		}
+		// if (this.isContextMenuPrevented) {
+		evt.preventDefault();
+		this.isContextMenuPrevented = false;
+		document.removeEventListener("contextmenu", this.contextMenuHandler);
+		// }
 	};
 
 	toggleBothSidebars() {
@@ -191,8 +213,8 @@ export default class EasytoggleSidebar extends Plugin {
 	onResize() {
 		const LS = this.getLeftSplit();
 		const RS = this.getRightSplit();
-		const { settings } = this
-		const { minRootWidth } = settings
+		const { settings } = this;
+		const { minRootWidth } = settings;
 
 		if (
 			!settings.autoMinRootWidth ||
@@ -203,15 +225,15 @@ export default class EasytoggleSidebar extends Plugin {
 		const editorWidth = this.getRootSplit().containerEl.clientWidth;
 		if (editorWidth < minRootWidth) {
 			if (LS.containerEl.clientWidth > 200) {
-				LS.setSize(200)
+				LS.setSize(200);
 			}
 			if (RS.containerEl.clientWidth > 200) {
-				RS.setSize(200)
+				RS.setSize(200);
 			}
-			
 		}
 		if (editorWidth < minRootWidth) {
-			const updatedEditorWidth = this.getRootSplit().containerEl.clientWidth;
+			const updatedEditorWidth =
+				this.getRootSplit().containerEl.clientWidth;
 			if (updatedEditorWidth < minRootWidth) {
 				this.toggleBothSidebars();
 			}
@@ -232,13 +254,15 @@ export default class EasytoggleSidebar extends Plugin {
 	}
 
 	autoHide = (evt: any) => {
-		const { app: { workspace } } = this as any
+		const {
+			app: { workspace },
+		} = this as any;
 		const rootSplitEl = workspace.rootSplit.containerEl;
 		const clickedElement = evt.target;
 		//Root body content only
 		const isBody = clickedElement.classList.contains("cm-content");
 		const isLine = clickedElement.classList.contains("cm-line");
-		const isLink = clickedElement.classList.contains("cm-underline");// links
+		const isLink = clickedElement.classList.contains("cm-underline"); // links
 		const isRoot = rootSplitEl.contains(clickedElement);
 		if (!isRoot) return;
 		if (isLine || isBody || isLink) {
