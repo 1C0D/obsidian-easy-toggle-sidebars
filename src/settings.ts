@@ -102,34 +102,27 @@ export class ETSSettingTab extends PluginSettingTab {
 			});
 
 		new Setting(containerEl)
-			.setName("Ribbon Button for autoHide")
-			.setDesc("Ribbon icon to switch autoHide")
+			.setName("Auto hide")
+			.setDesc(
+				"Auto hide panels when clicking on the editor. Add a Ribbon icon to switch autoHide"
+			)
 			.addToggle((toggle) => {
 				toggle
 					.setValue(this.plugin.settings.autoHideRibbon)
 					.onChange(async (value) => {
 						this.plugin.settings.autoHideRibbon = value;
-						await this.plugin.saveSettings();
 						if (this.plugin.settings.autoHideRibbon) {
+							this.plugin.settings.autoHide = true;
+							this.plugin.toggleAutoHideEvent();
+							this.plugin.toggleColor();
 							this.plugin.autoHideON();
-							await this.plugin.saveSettings();
 						} else {
 							this.plugin.ribbonIconEl?.remove();
 							this.plugin.ribbonIconEl = null;
+							this.plugin.settings.autoHide = false;
+							this.plugin.toggleAutoHideEvent();
+							this.plugin.toggleColor();
 						}
-					});
-			});
-
-		new Setting(containerEl)
-			.setName("Auto hide")
-			.setDesc("Auto hide panels when clicking on the editor")
-			.addToggle((toggle) => {
-				toggle
-					.setValue(this.plugin.settings.autoHide)
-					.onChange(async (value) => {
-						this.plugin.settings.autoHide = value;
-						this.plugin.toggleAutoHideEvent();
-						this.plugin.toggleColor();
 						await this.plugin.saveSettings();
 					});
 			});
@@ -149,7 +142,8 @@ export class ETSSettingTab extends PluginSettingTab {
 			});
 
 		new Setting(containerEl)
-			.setName("Min width threshold")
+			.setName("Set editor min width")
+			.setDesc("min width triggering auto reduce/close sidebars")
 			.addSlider((slider) => {
 				slider
 					.setLimits(200, 800, 10)
@@ -166,6 +160,30 @@ export class ETSSettingTab extends PluginSettingTab {
 					.onClick(async () => {
 						this.plugin.settings.minRootWidth =
 							DEFAULT_SETTINGS.minRootWidth;
+						await this.plugin.saveSettings();
+						this.display();
+					});
+			});
+
+		new Setting(containerEl)
+			.setName("double click delay(ms)")
+			.setDesc("max delay to trigger a double click")
+			.addSlider((slider) => {
+				slider
+					.setLimits(200, 600, 10)
+					.setValue(this.plugin.settings.dblClickDelay)
+					.setDynamicTooltip()
+					.onChange(async (value) => {
+						this.plugin.settings.dblClickDelay = value;
+						await this.plugin.saveSettings();
+					});
+			})
+			.addExtraButton((btn) => {
+				btn.setIcon("reset")
+					.setTooltip("Reset to default")
+					.onClick(async () => {
+						this.plugin.settings.dblClickDelay =
+							DEFAULT_SETTINGS.dblClickDelay;
 						await this.plugin.saveSettings();
 						this.display();
 					});
