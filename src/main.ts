@@ -4,7 +4,8 @@ import { ETSSettingTab } from "./settings";
 interface ETSSettings {
 	useRightMouse: boolean;
 	useMiddleMouse: boolean;
-	moveThreshold: number;
+	moveThresholdHor: number;
+	moveThresholdVert: number;
 	autoHide: boolean;
 	autoHideRibbon: boolean;
 	autoMinRootWidth: boolean;
@@ -14,7 +15,8 @@ interface ETSSettings {
 export const DEFAULT_SETTINGS: ETSSettings = {
 	useRightMouse: true,
 	useMiddleMouse: true,
-	moveThreshold: 150,
+	moveThresholdHor: 150,
+	moveThresholdVert: 250,
 	autoHide: false,
 	autoHideRibbon: true,
 	autoMinRootWidth: false,
@@ -25,10 +27,17 @@ export default class EasytoggleSidebar extends Plugin {
 	isContextMenuPrevented = false;
 	settings: ETSSettings;
 	ribbonIconEl!: HTMLElement | null;
-	private startX: number;
-	private startY: number;
-	isTracking = false;
-	moved = true;
+	private startX: number = 0;
+	private startY: number = 0;
+	private endX: number = 0;
+	private endY: number = 0;
+	private isTracking = false;
+	private distanceX = 0;
+	private distanceY = 0;
+	private movedX = false;
+	private movedY = false;
+	private doubleClickTimer: NodeJS.Timeout | null = null;
+	private doubleClickDelay = 350; // add a setting
 
 	async onload() {
 		await this.loadSettings();
@@ -60,12 +69,8 @@ export default class EasytoggleSidebar extends Plugin {
 		});
 	}
 
+
 	mousedownHandler = (evt: MouseEvent) => {
-		window.removeEventListener(
-			"contextmenu",
-			this.contextmenuHandler,
-			true
-		);
 		if (evt.button === 0) return;
 		const { settings } = this;
 		const RMB = settings.useRightMouse;
@@ -74,70 +79,76 @@ export default class EasytoggleSidebar extends Plugin {
 			this.startX = evt.clientX;
 			this.startY = evt.clientY;
 			this.isTracking = true;
+
+			// Start the double-click timer
+			if (evt.detail === 2) {
+				// if (this.doubleClickTimer) clearTimeout(this.doubleClickTimer);
+				this.addContextMenuListener();
+				this.doubleClickTimer = setTimeout(() => {
+					this.doubleClickTimer = null;
+					this.removeContextMenuListener();
+				}, this.doubleClickDelay);
+			}
 		}
 	};
 
 	mousemoveHandler = (e: MouseEvent) => {
-		if (this.isTracking) {
-			const { settings } = this;
-			const endX = e.clientX;
-			const endY = e.clientY;
+		if (!this.isTracking) return;
 
-			const distanceX = Math.abs(endX - this.startX);
-			const distanceY = Math.abs(endY - this.startY);
+		const { settings } = this;
+		this.endX = e.clientX;
+		this.endY = e.clientY;
 
-			if (
-				distanceX >= settings.moveThreshold ||
-				distanceY >= settings.moveThreshold
-			) {
-				window.addEventListener(
-					"contextmenu",
-					this.contextmenuHandler,
-					true
-				);
-				this.moved = true;
-			} else {
-				this.moved = false;
-			}
+		this.distanceX = Math.abs(this.endX - this.startX);
+		this.distanceY = Math.abs(this.endY - this.startY);
+
+		this.movedX = this.distanceX > settings.moveThresholdHor;
+		this.movedY = this.distanceY > settings.moveThresholdVert;
+
+		if (this.movedX || this.movedY) {
+			this.addContextMenuListener();
 		}
 	};
 
 	mouseupHandler = (evt: MouseEvent) => {
-		if (!this.moved) {
-			window.removeEventListener(
-				"contextmenu",
-				this.contextmenuHandler,
-				true
-			);
-			return;
-		}
+		if (!this.isTracking) return;
+		this.isTracking = false; //to stop operations on mousemoveHandler
 
 		const { settings } = this;
 		const RMB = settings.useRightMouse;
 		const MMB = settings.useMiddleMouse;
+
+		if (
+			((MMB && evt.button === 1) || (RMB && evt.button === 2)) &&
+			evt.detail === 2 &&
+			this.doubleClickTimer
+		) {
+			this.toggleBothSidebars();
+			// clearTimeout(this.doubleClickTimer);
+			// this.removeContextMenuListener(); // shouldn't be useful
+			return;
+		}
+
 		if (
 			((MMB && evt.button === 1) || (RMB && evt.button === 2)) &&
 			evt.detail === 1
-		) {
-			let endX = evt.clientX;
-			let endY = evt.clientY;
-
-			if (endX < this.startX || endY < this.startY) {
+		)
+			if (
+				(this.distanceX > settings.moveThresholdHor &&
+					this.endX < this.startX) ||
+				(this.distanceY > settings.moveThresholdVert &&
+					this.endY < this.startY)
+			) {
 				this.toggle(this.getLeftSplit());
 			} else if (
-				(settings.moveThreshold && endX > this.startX) ||
-				(settings.moveThreshold && endY > this.startY)
+				(this.distanceX > settings.moveThresholdHor &&
+					this.endX > this.startX) ||
+				(settings.moveThresholdVert && this.endY > this.startY)
 			) {
 				this.toggle(this.getRightSplit());
 			}
-		}
-		if (
-			((MMB && evt.button === 1) || (RMB && evt.button === 2)) &&
-			evt.detail === 2
-		) {
-			this.toggleBothSidebars();
-		}
-		this.moved = false;
+
+		this.removeContextMenuListener();
 	};
 
 	autoHideON = () => {
@@ -174,16 +185,30 @@ export default class EasytoggleSidebar extends Plugin {
 
 	contextmenuHandler(evt: MouseEvent) {
 		evt.preventDefault();
-		// evt.stopPropagation();
 	}
 
-	contextMenuHandler = (evt: MouseEvent) => {
-		// if (this.isContextMenuPrevented) {
-		evt.preventDefault();
-		this.isContextMenuPrevented = false;
-		document.removeEventListener("contextmenu", this.contextMenuHandler);
-		// }
-	};
+	addContextMenuListener(){
+		return window.addEventListener(
+			"contextmenu",
+			this.contextmenuHandler,
+			true
+		);
+	}
+
+	removeContextMenuListener() {
+		if (this.movedX || this.movedY || this.doubleClickTimer)
+			return setTimeout(() => {
+				window.removeEventListener(
+					"contextmenu",
+					this.contextmenuHandler,
+					true
+				);
+				this.movedX = false;
+				this.movedY = false;
+				this.doubleClickTimer = null;
+				console.log("removed")
+			}, 20);
+	}
 
 	toggleBothSidebars() {
 		const isLeftOpen = this.isOpen(this.getLeftSplit());
