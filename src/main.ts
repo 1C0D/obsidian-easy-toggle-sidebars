@@ -51,6 +51,12 @@ export default class EasytoggleSidebar extends Plugin {
 			this.registerDomEvent(document, "mousemove", this.mousemoveHandler);
 			this.registerDomEvent(document, "mouseup", this.mouseupHandler);
 
+			this.registerDomEvent(
+				document,
+				"dblclick",
+				this.toggleRightSidebar
+			);
+
 			this.addCommand({
 				id: "toggle-both-sidebars",
 				name: "Toggle both sidebars",
@@ -98,7 +104,6 @@ export default class EasytoggleSidebar extends Plugin {
 
 		this.movedX = this.distanceX > settings.moveThresholdHor;
 		this.movedY = this.distanceY > settings.moveThresholdVert;
-		
 
 		if (this.movedX || this.movedY) {
 			this.addContextMenuListener();
@@ -138,7 +143,6 @@ export default class EasytoggleSidebar extends Plugin {
 			evt.detail === 2 &&
 			this.doubleClickTimer
 		) {
-			console.log("toggle");
 			this.addContextMenuListener();
 			this.toggleBothSidebars();
 			this.removeContextMenuListener();
@@ -215,7 +219,6 @@ export default class EasytoggleSidebar extends Plugin {
 				this.movedX = false;
 				this.movedY = false;
 				this.doubleClickTimer = null;
-				console.log("removed");
 			}, delay);
 	}
 
@@ -303,10 +306,7 @@ export default class EasytoggleSidebar extends Plugin {
 	}
 
 	autoHide = (evt: any) => {
-		const {
-			app: { workspace },
-		} = this as any;
-		const rootSplitEl = workspace.rootSplit.containerEl;
+		const rootSplitEl = this.getRootSplit().containerEl;
 		const clickedElement = evt.target;
 		//Root body content only
 		const isBody = clickedElement.classList.contains("cm-content");
@@ -315,11 +315,20 @@ export default class EasytoggleSidebar extends Plugin {
 		const isRoot = rootSplitEl.contains(clickedElement);
 		if (!isRoot) return;
 		if (isLine || isBody || isLink) {
-			const leftSplit = workspace.leftSplit;
-			const rightSplit = workspace.rightSplit;
+			const leftSplit = this.getLeftSplit();
+			const rightSplit = this.getRightSplit();
 			if (!leftSplit.collapsed || !rightSplit.collapsed) {
 				this.toggleBothSidebars();
 			}
+		}
+	};
+
+	toggleRightSidebar = (evt: any) => {
+		const clickedElement = evt.target;
+		const isRibbon = clickedElement.classList.contains("workspace-ribbon");
+		if (isRibbon) {
+			const leftSplit = this.getLeftSplit();
+			this.toggle(leftSplit, 2);
 		}
 	};
 
