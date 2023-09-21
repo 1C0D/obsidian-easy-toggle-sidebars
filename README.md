@@ -13,8 +13,5 @@ With RightMouseButton or MiddleMouseButton :
   - vertical moves (up/down) or even horizontal to the right 
   - left right double click → both sidebars (I couldn't prevent from opening contextmenu, so esc or left click after)
 - Command "toggle both sidebars" added.	
-    
-![demo](gifDemo.gif)
-  
-settings
-![settings](settings.jpg)
+
+![demo](fix_right_click.gif)
