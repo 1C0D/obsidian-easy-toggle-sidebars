@@ -366,10 +366,8 @@ export default class EasytoggleSidebar extends Plugin {
 		const isLeftSplit = clickedElement.closest(".mod-top-left-space");
 		if (isLeftSplit) {
 			const activeLeftSplit = this.getActiveSidebarLeaf.bind(this)()[0]
-			console.log("activeLeftSplit", activeLeftSplit)
 			const isExplorerLeaf = activeLeftSplit?.getViewState().type === 'file-explorer'
 			if (isExplorerLeaf) {
-				console.log("là")
 				if (this.previousActiveSplitLeaf) this.app.workspace.revealLeaf(this.previousActiveSplitLeaf)
 			} else {
 				const explorerLeaf = this.app.workspace.getLeavesOfType('file-explorer')[0];
