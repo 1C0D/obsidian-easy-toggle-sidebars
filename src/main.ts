@@ -1,4 +1,4 @@
-import { Notice, Plugin, WorkspaceSidedock } from "obsidian";
+import { Notice, Plugin, WorkspaceLeaf, WorkspaceSidedock } from "obsidian";
 import { ETSSettingTab } from "./settings";
 
 interface ETSSettings {
@@ -38,6 +38,9 @@ export default class EasytoggleSidebar extends Plugin {
 	private movedX = false;
 	private movedY = false;
 	private doubleClickTimer: NodeJS.Timeout | null = null;
+	private clicked: number = 0;
+	private clickTimeout: ReturnType<typeof setTimeout> | null = null;
+	private previousActiveSplitLeaf: WorkspaceLeaf | null;
 
 	async onload() {
 		await this.loadSettings();
@@ -54,8 +57,34 @@ export default class EasytoggleSidebar extends Plugin {
 			this.registerDomEvent(
 				document,
 				"dblclick",
-				this.toggleRightSidebar
+				async (evt) => {
+					this.toggleRightSidebar(evt)
+				}
 			);
+
+			this.registerDomEvent(
+				document,
+				"click",
+				async (evt) => {
+					if (this.clickTimeout) {
+						clearTimeout(this.clickTimeout);
+					}
+
+					if (!this.clicked) {
+						this.clicked = 1;
+					} else {
+						this.clicked++;
+					}
+
+					this.clickTimeout = setTimeout(async () => {
+						if (this.clicked === 3) {
+							await this.goToExplorerTab.bind(this)(evt);
+						}
+						this.clicked = 0;
+					}, 400); // Temps en millisecondes pour reconnaître un triple clic
+				}
+			);
+
 
 			this.addCommand({
 				id: "toggle-both-sidebars",
@@ -331,6 +360,36 @@ export default class EasytoggleSidebar extends Plugin {
 			this.toggle(leftSplit, 2);
 		}
 	};
+
+	goToExplorerTab = async (evt: any) => {
+		const clickedElement = evt.target;
+		const isLeftSplit = clickedElement.closest(".mod-top-left-space");
+		if (isLeftSplit) {
+			const activeLeftSplit = this.getActiveSidebarLeaf.bind(this)()[0]
+			console.log("activeLeftSplit", activeLeftSplit)
+			const isExplorerLeaf = activeLeftSplit?.getViewState().type === 'file-explorer'
+			if (isExplorerLeaf) {
+				console.log("là")
+				if (this.previousActiveSplitLeaf) this.app.workspace.revealLeaf(this.previousActiveSplitLeaf)
+			} else {
+				const explorerLeaf = this.app.workspace.getLeavesOfType('file-explorer')[0];
+				this.app.workspace.revealLeaf(explorerLeaf)
+			}
+			this.previousActiveSplitLeaf = activeLeftSplit
+		}
+	};
+
+	getActiveSidebarLeaf(): WorkspaceLeaf[] {
+		const leftRoot = this.app.workspace.leftSplit.getRoot()
+		const leaves: WorkspaceLeaf[] = []
+		this.app.workspace.iterateAllLeaves((leaf) => {
+			if (leaf.getRoot() == leftRoot && leaf.view.containerEl.clientWidth > 0) { 
+				leaves.push(leaf)
+			}
+		})
+		return leaves
+	}
+
 
 	async loadSettings() {
 		this.settings = Object.assign(
