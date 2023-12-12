@@ -1,6 +1,6 @@
 # Easy toggle sidebars 
 
-New: triple left click on Left SideBar to toggle view to explorer and triple click again to get back to previous view
+New: double left click on leaf tab header to toggle pin
   
 With RightMouseButton or MiddleMouseButton :
 - double click to toggle both sidebars
@@ -12,6 +12,8 @@ With RightMouseButton or MiddleMouseButton :
   - left dbl click (on empty zone) → toggle left sidebar (the most useful)
   - click + vertical moves or horizontal to the right 
   - right double click → both sidebars
+
+- tab header: double left click on leaf tab header to toggle pin
 
 -from the sidebar:
   - triple left click to go to explorer tab, triple click again to get back to previous tab 

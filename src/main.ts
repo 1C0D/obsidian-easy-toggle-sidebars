@@ -1,4 +1,4 @@
-import { Notice, Plugin, WorkspaceLeaf, WorkspaceSidedock } from "obsidian";
+import { Notice, Plugin, View, WorkspaceLeaf, WorkspaceSidedock } from "obsidian";
 import { ETSSettingTab } from "./settings";
 
 interface ETSSettings {
@@ -63,7 +63,7 @@ export default class EasytoggleSidebar extends Plugin {
 			);
 
 			this.registerDomEvent(
-				document,
+				document.win,
 				"click",
 				async (evt) => {
 					if (this.clickTimeout) {
@@ -79,6 +79,8 @@ export default class EasytoggleSidebar extends Plugin {
 					this.clickTimeout = setTimeout(async () => {
 						if (this.clicked === 3) {
 							await this.goToExplorerTab.bind(this)(evt);
+						} else if (this.clicked === 2) {
+							await this.togglePin.bind(this)(evt);
 						}
 						this.clicked = 0;
 					}, 400); // Temps en millisecondes pour reconnaître un triple clic
@@ -363,7 +365,7 @@ export default class EasytoggleSidebar extends Plugin {
 
 	goToExplorerTab = async (evt: any) => {
 		const clickedElement = evt.target;
-		const isLeftSplit = clickedElement.closest(".mod-top-left-space");
+		const isLeftSplit = clickedElement.closest(".mod-left-split");
 		if (isLeftSplit) {
 			const activeLeftSplit = this.getActiveSidebarLeaf.bind(this)()[0]
 			const isExplorerLeaf = activeLeftSplit?.getViewState().type === 'file-explorer'
@@ -377,11 +379,36 @@ export default class EasytoggleSidebar extends Plugin {
 		}
 	};
 
+
+	togglePin = async (evt: any) => {
+		console.log("ici")
+		const clickedElement = evt.target;
+		const isTabheader = clickedElement.closest(".workspace-tab-header-inner-title");
+		console.log("clicked")
+		const activeLeaf = this.app.workspace.getActiveViewOfType(View)?.leaf
+		// const activeLeaf = this.app.workspace.activeLeaf
+		const { isMainWindow, rootSplit } = this.getLeafProperties(activeLeaf)
+		const condition = isMainWindow && rootSplit || !isMainWindow
+		if (activeLeaf && condition) { activeLeaf.togglePinned() }
+
+	}
+
+	getLeafProperties(
+		leaf: WorkspaceLeaf | undefined,
+	): {
+		isMainWindow: boolean;
+		rootSplit: boolean;
+	} {
+		const isMainWindow = leaf?.view.containerEl.win === window;
+		const rootSplit = leaf?.getRoot() === this.app.workspace.rootSplit;
+		return { isMainWindow, rootSplit };
+	}
+
 	getActiveSidebarLeaf(): WorkspaceLeaf[] {
 		const leftRoot = this.app.workspace.leftSplit.getRoot()
 		const leaves: WorkspaceLeaf[] = []
 		this.app.workspace.iterateAllLeaves((leaf) => {
-			if (leaf.getRoot() == leftRoot && leaf.view.containerEl.clientWidth > 0) { 
+			if (leaf.getRoot() == leftRoot && leaf.view.containerEl.clientWidth > 0) {
 				leaves.push(leaf)
 			}
 		})
