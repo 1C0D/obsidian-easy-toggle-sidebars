@@ -40,6 +40,7 @@ function updateVersion() {
         // Git add, commit et push
         execSync(`git add -A && git commit -m "Updated to version ${targetVersion}" && git push`);
         console.log(`version update to ${targetVersion}`);
+        process.exit()
     });
 }
 
