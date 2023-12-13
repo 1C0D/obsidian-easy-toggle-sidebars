@@ -154,16 +154,14 @@ export default class EasytoggleSidebar extends Plugin {
 			evt.detail === 1
 		)
 			if (
-				(this.distanceX > settings.moveThresholdHor &&
-					this.endX < this.startX) ||
-				(this.distanceY > settings.moveThresholdVert &&
-					this.endY < this.startY)
+				(this.movedX && this.endX < this.startX) ||
+				(this.movedY && this.endY < this.startY)
 			) {
 				this.toggle(this.getLeftSplit(), 2);
+				this.removeContextMenuListener();
 			} else if (
-				(this.distanceX > settings.moveThresholdHor &&
-					this.endX > this.startX) ||
-				(settings.moveThresholdVert && this.endY > this.startY)
+				(this.movedX && this.endX > this.startX) ||
+				(this.movedY && this.endY > this.startY)
 			) {
 				this.toggle(this.getRightSplit(), 2);
 				this.removeContextMenuListener();

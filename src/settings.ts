@@ -58,7 +58,7 @@ export class ETSSettingTab extends PluginSettingTab {
 			.setDesc("the most used")
 			.addSlider((slider) => {
 				slider
-					.setLimits(50, 500, 10)
+					.setLimits(50, 410, 20)
 					.setValue(this.plugin.settings.moveThresholdHor)
 					.setDynamicTooltip()
 					.onChange(async (value) => {
@@ -82,7 +82,7 @@ export class ETSSettingTab extends PluginSettingTab {
 			.setDesc("could be used in ribbon bar, when using canvas")
 			.addSlider((slider) => {
 				slider
-					.setLimits(50, 500, 10)
+					.setLimits(50, 410, 20)
 					.setValue(this.plugin.settings.moveThresholdVert)
 					.setDynamicTooltip()
 					.onChange(async (value) => {
