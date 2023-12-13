@@ -381,12 +381,9 @@ export default class EasytoggleSidebar extends Plugin {
 
 
 	togglePin = async (evt: any) => {
-		console.log("ici")
 		const clickedElement = evt.target;
 		const isTabheader = clickedElement.closest(".workspace-tab-header-inner-title");
-		console.log("clicked")
 		const activeLeaf = this.app.workspace.getActiveViewOfType(View)?.leaf
-		// const activeLeaf = this.app.workspace.activeLeaf
 		const { isMainWindow, rootSplit } = this.getLeafProperties(activeLeaf)
 		const condition = isMainWindow && rootSplit || !isMainWindow
 		if (activeLeaf && condition) { activeLeaf.togglePinned() }
