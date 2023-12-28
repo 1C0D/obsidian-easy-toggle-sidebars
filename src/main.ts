@@ -11,6 +11,7 @@ interface ETSSettings {
 	autoMinRootWidth: boolean;
 	minRootWidth: number;
 	dblClickDelay: number;
+	togglePin:boolean
 }
 
 export const DEFAULT_SETTINGS: ETSSettings = {
@@ -23,6 +24,7 @@ export const DEFAULT_SETTINGS: ETSSettings = {
 	autoMinRootWidth: true,
 	minRootWidth: 300,
 	dblClickDelay: 450,
+	togglePin:true,
 };
 
 export default class EasytoggleSidebar extends Plugin {
@@ -79,7 +81,7 @@ export default class EasytoggleSidebar extends Plugin {
 					this.clickTimeout = setTimeout(async () => {
 						if (this.clicked === 3) {
 							await this.goToExplorerTab.bind(this)(evt);
-						} else if (this.clicked === 2) {
+						} else if (this.clicked === 2 && this.settings.togglePin) {
 							await this.togglePin.bind(this)(evt);
 						}
 						this.clicked = 0;
@@ -381,6 +383,7 @@ export default class EasytoggleSidebar extends Plugin {
 	togglePin = async (evt: any) => {
 		const clickedElement = evt.target;
 		const isTabheader = clickedElement.closest(".workspace-tab-header-inner-title");
+		if(!isTabheader) return
 		const activeLeaf = this.app.workspace.getActiveViewOfType(View)?.leaf
 		const { isMainWindow, rootSplit } = this.getLeafProperties(activeLeaf)
 		const condition = isMainWindow && rootSplit || !isMainWindow

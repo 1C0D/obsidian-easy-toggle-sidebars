@@ -188,5 +188,16 @@ export class ETSSettingTab extends PluginSettingTab {
 						this.display();
 					});
 			});
+
+		new Setting(containerEl)
+			.setName("double click on tab headers to toggle pin")
+			.addToggle((toggle) => {
+				toggle
+					.setValue(this.plugin.settings.togglePin)
+					.onChange(async (value) => {
+						this.plugin.settings.togglePin = value;
+						await this.plugin.saveSettings();
+					});
+			});
 	}
 }

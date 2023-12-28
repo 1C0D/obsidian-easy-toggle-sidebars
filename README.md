@@ -1,6 +1,6 @@
 # Easy toggle sidebars 
 
-New: double left click on leaf tab header to toggle pin
+New: double left click on leaf tab header to toggle pin. you can toggle it in options.
   
 With RightMouseButton or MiddleMouseButton :
 - double click to toggle both sidebars
