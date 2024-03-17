@@ -85,7 +85,7 @@ export default class EasytoggleSidebar extends Plugin {
 							await this.togglePin.bind(this)(evt);
 						}
 						this.clicked = 0;
-					}, 400); // Temps en millisecondes pour reconnaître un triple clic
+					}, 400); // to recognize the triple clic
 				}
 			);
 
